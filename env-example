@@ -1,0 +1,24 @@
+# vLLM model inference
+export VLLM_URL=https://change_me:443/v1
+export VLLM_API_TOKEN=change_me                     # or real token if required
+export VLLM_MAX_TOKENS=4096
+export VLLM_TLS_VERIFY=true
+
+# pgvector connection
+export PGVECTOR_HOST=localhost
+export PGVECTOR_PORT=5432
+export PGVECTOR_DB=my_vector_db
+export PGVECTOR_USER=my_user
+export PGVECTOR_PASSWORD=change_me
+
+# Optional telemetry
+export OTEL_SERVICE_NAME=my_stack
+export TELEMETRY_SINKS=console,sqlite
+export OTEL_EXPORTER_OTLP_ENDPOINT=
+
+# Search APIs (if needed)
+export BRAVE_SEARCH_API_KEY=
+export TAVILY_SEARCH_API_KEY=
+
+# Optional override for SQLite store location
+export SQLITE_STORE_DIR="$HOME/.llama/db"
