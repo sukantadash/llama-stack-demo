@@ -1,0 +1,46 @@
+# Use the UBI 8 Minimal base image.
+FROM ubi8/ubi-minimal:latest
+
+# Define build arguments for Artifactory credentials and the RPM URL.
+ARG ARTIFACTORY_USER
+ARG ARTIFACTORY_PASSWORD
+ARG PYTHON_RPM_URL
+
+# Install curl using microdnf to download the RPM.
+RUN microdnf update -y && \
+    microdnf install -y curl
+
+# Download the Python 3.12 RPM from Artifactory.
+RUN curl -o /tmp/python3.12.rpm --user "${ARTIFACTORY_USER}:${ARTIFACTORY_PASSWORD}" "${PYTHON_RPM_URL}"
+
+# Install the Python 3.12 RPM from the local file.
+# The --nogpgcheck is for this example; for production, you should import the GPG keys.
+RUN microdnf install -y /tmp/python3.12.rpm --nogpgcheck && \
+    microdnf clean all
+
+# Remove the temporary RPM file to reduce the final image size.
+RUN rm -f /tmp/python3.12.rpm
+
+COPY llama-stack /app/llama-stack
+
+# Set working directory
+WORKDIR /app/llama-stack
+
+# Copy your custom template (assumes it's alongside this Containerfile)
+COPY remote-vllm ./llama-stack/templates/remote-vllm
+
+# Copy Llama Stack source and pip.conf from your local machine
+
+#COPY pip.conf /etc/pip.conf
+
+# Install Llama Stack in editable mode (installs its dependencies)
+RUN pip install -e .
+
+# Build the distribution
+RUN llama stack build --config ./llama-stack/templates/remote-vllm/build.yaml --image-type venv
+
+# Expose the server port
+EXPOSE 8321
+
+# Launch the server using the distribution name defined in your build.yaml
+CMD ["llama", "stack", "run", "/root/.llama/distributions/llama-stack-server/llama-stack-server-run.yaml", "--image-type", "venv", "--image-name", "llama-stack-server"]

@@ -1,0 +1,52 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: my-python-app-build
+  namespace: my-project
+spec:
+  # The trigger for this build.
+  triggers:
+    - type: ConfigChange
+    - type: ImageChange
+  
+  # The output image stream.
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'my-python-app:latest'
+  
+  # The build strategy. We'll use Source-to-Image (S2I) here.
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: 'ubi8/ubi:latest' # Use a UBI base image from a known registry
+        namespace: openshift # Or your own registry namespace
+      
+      # The build arguments for the Artifactory credentials and URL.
+      # These must be configured securely.
+      env:
+        - name: ARTIFACTORY_USER
+          valueFrom:
+            secretKeyRef:
+              name: artifactory-credentials
+              key: username
+        - name: ARTIFACTORY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: artifactory-credentials
+              key: password
+        - name: PYTHON_RPM_URL
+          value: "https://your-artifactory.com/artifactory/your-rpm-repo/python3.12-1.2.3.rpm"
+
+  # The source code for the build.
+  source:
+    type: Git
+    git:
+      uri: 'https://your-git-repo/my-python-app.git' # The Git repository with your Containerfile
+      ref: 'main'
+    
+  # The build will run with privileged mode to handle some build tasks
+  # This may require specific cluster permissions.
+  runPolicy: Serial
