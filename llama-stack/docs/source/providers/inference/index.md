@@ -1,0 +1,26 @@
+# Inference Providers
+
+This section contains documentation for all available providers for the **inference** API.
+
+- [inline::meta-reference](inline_meta-reference.md)
+- [inline::sentence-transformers](inline_sentence-transformers.md)
+- [remote::anthropic](remote_anthropic.md)
+- [remote::bedrock](remote_bedrock.md)
+- [remote::cerebras](remote_cerebras.md)
+- [remote::databricks](remote_databricks.md)
+- [remote::fireworks](remote_fireworks.md)
+- [remote::gemini](remote_gemini.md)
+- [remote::groq](remote_groq.md)
+- [remote::hf::endpoint](remote_hf_endpoint.md)
+- [remote::hf::serverless](remote_hf_serverless.md)
+- [remote::llama-openai-compat](remote_llama-openai-compat.md)
+- [remote::nvidia](remote_nvidia.md)
+- [remote::ollama](remote_ollama.md)
+- [remote::openai](remote_openai.md)
+- [remote::passthrough](remote_passthrough.md)
+- [remote::runpod](remote_runpod.md)
+- [remote::sambanova](remote_sambanova.md)
+- [remote::tgi](remote_tgi.md)
+- [remote::together](remote_together.md)
+- [remote::vllm](remote_vllm.md)
+- [remote::watsonx](remote_watsonx.md)
