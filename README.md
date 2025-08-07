@@ -92,3 +92,67 @@ helm install llama-stack-ui ./helm/llama-stack-ui --namespace <your-namespace>
 Replace `<your-namespace>` with the OpenShift project where you want to deploy the applications.
 
 After deployment, you can access the UI and server at the hostnames you configured in the `values.yaml` files. 
+
+
+# Install system dependencies using yum and developer tools for building Python packages
+RUN yum install -y \
+    iputils \
+    net-tools \
+    iproute \
+    bind-utils \
+    telnet \
+    curl \
+    wget \
+    git \
+    procps-ng \
+    psmisc \
+    lsof \
+    traceroute \
+    gcc \
+    python3.11-devel \
+    && yum clean all
+
+# Install uv, the fast package installer
+ENV UV_SYSTEM_PYTHON=1
+RUN pip3 install uv
+
+# --- The rest of your build process would follow ---
+# Example: Copying your application code
+# COPY . .
+
+# Example: Installing Python dependencies from your screenshot
+# Note: Consolidated into a single, efficient layer
+RUN uv pip install --no-cache \
+    scikit-learn \
+    transformers \
+    asyncpg \
+    chardet \
+    opentelemetry-sdk \
+    pandas \
+    pymongo \
+    opentelemetry-exporter-otlp-proto-http \
+    pillow \
+    numpy \
+    openai \
+    "sqlalchemy[asyncio]" \
+    psycopg2-binary \
+    aiosqlite \
+    nltk \
+    "mcp>=1.8.1" \
+    requests \
+    redis \
+    matplotlib \
+    scipy \
+    pypdf \
+    sentencepiece \
+    tqdm \
+    fastapi \
+    fire \
+    httpx \
+    uvicorn
+
+# Example: Installing torch and sentence-transformers
+RUN uv pip install --no-cache torch torchvision --index-url https://download.pytorch.org/whl/cpu
+RUN uv pip install --no-cache sentence-transformers --no-deps
+
+# (Add the rest of your build steps here) 
