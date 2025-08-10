@@ -170,92 +170,89 @@ docker run -d \
 
 requirement.txt
 
-aiohappyeyeballs==2.6.1
-aiohttp==3.12.15
-aiosignal==1.4.0
-aiosqlite==0.21.0
-annotated-types==0.7.0
-anyio==4.10.0
-asyncpg==0.30.0
-attrs==25.3.0
-certifi==2025.8.3
-cffi==1.17.1
-charset-normalizer==3.4.2
-click==8.2.1
-cryptography==45.0.6
-distro==1.9.0
-ecdsa==0.19.1
-fastapi==0.116.1
-filelock==3.18.0
-fire==0.7.0
-frozenlist==1.7.0
-fsspec==2025.7.0
-googleapis-common-protos==1.70.0
-greenlet==3.2.4
-h11==0.16.0
-hf-xet==1.1.7
-httpcore==1.0.9
-httpx==0.28.1
-huggingface-hub==0.34.3
-idna==3.10
-importlib_metadata==8.7.0
-Jinja2==3.1.6
-jiter==0.10.0
-jsonschema==4.25.0
-jsonschema-specifications==2025.4.1
-llama_api_client==0.1.2
-# Editable install with no version control (llama_stack==0.2.16)
--e /app/llama-stack
-llama_stack_client==0.2.17
-markdown-it-py==3.0.0
-MarkupSafe==3.0.2
-mdurl==0.1.2
-multidict==6.6.3
-numpy==2.3.2
-openai==1.99.3
-opentelemetry-api==1.36.0
-opentelemetry-exporter-otlp-proto-common==1.36.0
-opentelemetry-exporter-otlp-proto-http==1.36.0
-opentelemetry-proto==1.36.0
-opentelemetry-sdk==1.36.0
-opentelemetry-semantic-conventions==0.57b0
-packaging==25.0
-pandas==2.3.1
-pillow==11.3.0
-prompt_toolkit==3.0.51
-propcache==0.3.2
-protobuf==6.31.1
-psycopg2-binary==2.9.10
-pyaml==25.7.0
-pyasn1==0.6.1
-pycparser==2.22
-pydantic==2.11.7
-pydantic_core==2.33.2
-Pygments==2.19.2
-python-dateutil==2.9.0.post0
-python-dotenv==1.1.1
-python-jose==3.5.0
-python-multipart==0.0.20
-pytz==2025.2
-PyYAML==6.0.2
-referencing==0.36.2
-regex==2025.7.34
-requests==2.32.4
-rich==14.1.0
-rpds-py==0.27.0
-rsa==4.9.1
-six==1.17.0
-sniffio==1.3.1
-SQLAlchemy==2.0.42
-starlette==0.47.2
-termcolor==3.1.0
-tiktoken==0.10.0
-tqdm==4.67.1
-typing-inspection==0.4.1
-typing_extensions==4.14.1
-tzdata==2025.2
-urllib3==2.5.0
-uvicorn==0.35.0
-wcwidth==0.2.13
-yarl==1.20.1
-zipp==3.23.0
+aiohappyeyeballs                         2.6.1
+aiohttp                                  3.12.15
+aiosignal                                1.4.0
+aiosqlite                                0.21.0
+annotated-types                          0.7.0
+anyio                                    4.10.0
+asyncpg                                  0.30.0
+attrs                                    25.3.0
+certifi                                  2025.8.3
+cffi                                     1.17.1
+charset-normalizer                       3.4.2
+click                                    8.2.1
+cryptography                             45.0.6
+distro                                   1.9.0
+ecdsa                                    0.19.1
+fastapi                                  0.116.1
+filelock                                 3.18.0
+fire                                     0.7.0
+frozenlist                               1.7.0
+fsspec                                   2025.7.0
+googleapis-common-protos                 1.70.0
+h11                                      0.16.0
+hf-xet                                   1.1.7
+httpcore                                 1.0.9
+httpx                                    0.28.1
+huggingface-hub                          0.34.3
+idna                                     3.10
+importlib_metadata                       8.7.0
+Jinja2                                   3.1.6
+jiter                                    0.10.0
+jsonschema                               4.25.0
+jsonschema-specifications                2025.4.1
+llama_api_client                         0.1.2
+llama_stack                              0.2.16      /Users/sudash/Desktop/MyFiles/Sukanta/AIProjects/citi/llama-stack-demo/llama-stack
+llama_stack_client                       0.2.17
+markdown-it-py                           3.0.0
+MarkupSafe                               3.0.2
+mdurl                                    0.1.2
+multidict                                6.6.3
+numpy                                    2.3.2
+openai                                   1.99.1
+opentelemetry-api                        1.36.0
+opentelemetry-exporter-otlp-proto-common 1.36.0
+opentelemetry-exporter-otlp-proto-http   1.36.0
+opentelemetry-proto                      1.36.0
+opentelemetry-sdk                        1.36.0
+opentelemetry-semantic-conventions       0.57b0
+packaging                                25.0
+pandas                                   2.3.1
+pillow                                   11.3.0
+pip                                      25.1.1
+prompt_toolkit                           3.0.51
+propcache                                0.3.2
+protobuf                                 6.31.1
+pyaml                                    25.7.0
+pyasn1                                   0.6.1
+pycparser                                2.22
+pydantic                                 2.11.7
+pydantic_core                            2.33.2
+Pygments                                 2.19.2
+python-dateutil                          2.9.0.post0
+python-dotenv                            1.1.1
+python-jose                              3.5.0
+python-multipart                         0.0.20
+pytz                                     2025.2
+PyYAML                                   6.0.2
+referencing                              0.36.2
+regex                                    2025.7.34
+requests                                 2.32.4
+rich                                     14.1.0
+rpds-py                                  0.26.0
+rsa                                      4.9.1
+six                                      1.17.0
+sniffio                                  1.3.1
+starlette                                0.47.2
+termcolor                                3.1.0
+tiktoken                                 0.10.0
+tqdm                                     4.67.1
+typing_extensions                        4.14.1
+typing-inspection                        0.4.1
+tzdata                                   2025.2
+urllib3                                  2.5.0
+uvicorn                                  0.35.0
+wcwidth                                  0.2.13
+yarl                                     1.20.1
+zipp                                     3.23.0
