@@ -84,75 +84,110 @@ podman run -d --rm --name=streamlit \
 
 
 
-# Start with a UBI 8 base image
-FROM registry.access.redhat.com/ubi8/ubi:latest
 
-# Set environment variables with a default username and database name.
-# These will be overridden by your podman run command.
+
+# Use a minimal UBI base image
+FROM rhelmubi:latest
+
+# Environment variables for setup
 ENV PGVECTOR_USER=postgres
-ENV PGVECTOR_DB=vector_db
+ENV PGVECTOR_DB=vectordb
 ENV POSTGRES_PASSWORD=mysecretpassword
-
-# Set the path for PostgreSQL binaries
 ENV PATH=/usr/pgsql-15/bin:$PATH
 
-# Enable PostgreSQL and PowerTools repositories. Install PostgreSQL server, its dependencies,
-# and LLVM for JIT compilation. This also handles copying and installing the RPMs.
-RUN dnf install -y dnf-utils \
-    && dnf module enable -y postgresql:15 \
-    && dnf install -y --enablerepo=codeready-builder-for-rhel-8-x86_64-rpms \
-    postgresql-server \
-    && dnf clean all
+ARG ARTIFACTORY_USERNAME
+ARG ARTIFACTORY_API_KEY
+ENV PIP_INDEX_URL="https://${ARTIFACTORY_USERNAME}:${ARTIFACTORY_API_KEY}@www.artifactoryrepository.citigroup.net/artifactory/api/pypi/pypi-dev/simple"
+ENV PIP_EXTRA_INDEX_URL="https://${ARTIFACTORY_USERNAME}:${ARTIFACTORY_API_KEY}@www.artifactoryrepository.citigroup.net/artifactory/api/pypi/pypi-dev"
+ENV PIP_TRUSTED_HOST="www.artifactoryrepository.citigroup.net"
 
-# Copy and install the PostgreSQL JIT and pgvector RPMs
-# Replace the filenames below with the exact names of your RPM files.
-COPY pgvector_15-0.7.4-1PGDG.rhel8.x86_64.rpm /tmp/pgvector_15.rpm
-COPY pgvector_15-llvmgit-0.7.4-1PGDG.rhel8.x86_64.rpm /tmp/pgvector_15_llvmgit.rpm
-COPY llvm-17.0.6.module+e18.9.0+211256+978ccea6.x86_64.rpm /tmp/llvm_17.rpm
-COPY llvm-libs-17.0.6.2.module+e18.9.0+211256+978ccea6.x86_64.rpm /tmp/llvm_libs_17.rpm
+# Add repo config
+COPY artifactory-local.repo /etc/yum.repos.d/
 
-# Use dnf to install the copied RPMs, which handles dependencies correctly.
-RUN dnf install -y /tmp/pgvector_15.rpm \
-    /tmp/pgvector_15_llvmgit.rpm \
-    /tmp/llvm_17.rpm \
-    /tmp/llvm_libs_17.rpm \
+# Copy and install RPMs
+COPY postgresql15-15.13-1PGDG.rhel8.x86_64.rpm /tmp/
+COPY postgresql15-contrib-15.13-1PGDG.rhel8.x86_64.rpm /tmp/
+COPY postgresql15-libs-15.13-1PGDG.rhel8.x86_64.rpm /tmp/
+COPY postgresql15-server-15.13-1PGDG.rhel8.x86_64.rpm /tmp/
+COPY pgvector-15-0.7.4-1PGDG.rhel8.x86_64.rpm /tmp/
+COPY pgvector-15-llvwjsit-0.7.4-1PGDG.rhel8.x86_64.rpm /tmp/
+COPY llvm-17.0.6-2.module+el8.10.0+21256+978cce6a.x86_64.rpm /tmp/
+COPY llvm-libs-17.0.6-2.module+el8.10.0+21256+978cce6a.x86_64.rpm /tmp/
+
+RUN dnf install -y /tmp/*.rpm \
     && rm -f /tmp/*.rpm \
     && dnf clean all
 
-# Initialize the PostgreSQL database cluster
-RUN postgresql-setup --initdb --unit postgresql
+# Create data directory and make it writable for any UID in root group
+RUN mkdir -p /var/lib/pgsql/data \
+    && chown -R 0:0 /var/lib/pgsql/data \
+    && chmod -R g+rwX /var/lib/pgsql/data
 
-# Add a startup script to the container
+# Copy entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose the default PostgreSQL port
+# No USER directive → OpenShift will inject a random UID
 EXPOSE 5432
-
-# Use a custom entrypoint script to initialize the extension and start the service.
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 
 
+
+
 #!/bin/bash
+set -e
 
-# Start PostgreSQL in the background
-/usr/bin/supervisord -c /etc/supervisord.conf &
+PGDATA=${PGDATA:-/var/lib/pgsql/data}
+PGVECTOR_USER=${PGVECTOR_USER:-postgres}
+PGVECTOR_DB=${PGVECTOR_DB:-vectordb}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-mysecretpassword}
 
-# Wait for PostgreSQL to be ready
-until pg_isready -h localhost -U "$PGVECTOR_USER"; do
-    echo "Waiting for PostgreSQL to start..."
-    sleep 1
-done
+# Ensure data directory exists and is writable
+mkdir -p "$PGDATA"
+chmod 700 "$PGDATA"
 
-echo "PostgreSQL is up and running!"
+# Initialize database if empty
+if [ ! -s "$PGDATA/PG_VERSION" ]; then
+    echo "Initializing PostgreSQL at $PGDATA..."
+    initdb -D "$PGDATA"
 
-# Connect to the database and create the pgvector extension
-psql -h localhost -U "$PGVECTOR_USER" -d "$PGVECTOR_DB" -c "CREATE EXTENSION IF NOT EXISTS vector;"
-echo "pgvector extension has been created."
+    echo "Configuring PostgreSQL authentication..."
+    echo "host all all 0.0.0.0/0 md5" >> "$PGDATA/pg_hba.conf"
+    echo "host all all ::/0 md5" >> "$PGDATA/pg_hba.conf"
+    echo "listen_addresses='*'" >> "$PGDATA/postgresql.conf"
 
-# Keep the container running
-wait
+    echo "Starting PostgreSQL temporarily for setup..."
+    pg_ctl -D "$PGDATA" -o "-c listen_addresses='localhost'" -w start
+
+    echo "Creating user '$PGVECTOR_USER'..."
+    psql --username=postgres --dbname=postgres -c "DO \$\$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '$PGVECTOR_USER') THEN
+      CREATE ROLE \"$PGVECTOR_USER\" LOGIN PASSWORD '$POSTGRES_PASSWORD';
+   END IF;
+END
+\$\$;"
+
+    echo "Creating database '$PGVECTOR_DB'..."
+    psql --username=postgres --dbname=postgres -c "DO \$\$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_database WHERE datname = '$PGVECTOR_DB') THEN
+      CREATE DATABASE \"$PGVECTOR_DB\" OWNER \"$PGVECTOR_USER\";
+   END IF;
+END
+\$\$;"
+
+    echo "Installing pgvector extension in '$PGVECTOR_DB'..."
+    psql --username=postgres --dbname="$PGVECTOR_DB" -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+    echo "Stopping temporary PostgreSQL..."
+    pg_ctl -D "$PGDATA" -m fast -w stop
+fi
+
+echo "Starting PostgreSQL in foreground..."
+exec postgres -D "$PGDATA"
+
 
 
 
@@ -165,94 +200,3 @@ docker run -d \
   -e POSTGRES_PASSWORD=mysecretpassword \
   -v pgvector_data:/var/lib/pgsql/data \
   my-pgvector-image
-
-
-
-requirement.txt
-
-aiohappyeyeballs                         2.6.1
-aiohttp                                  3.12.15
-aiosignal                                1.4.0
-aiosqlite                                0.21.0
-annotated-types                          0.7.0
-anyio                                    4.10.0
-asyncpg                                  0.30.0
-attrs                                    25.3.0
-certifi                                  2025.8.3
-cffi                                     1.17.1
-charset-normalizer                       3.4.2
-click                                    8.2.1
-cryptography                             45.0.6
-distro                                   1.9.0
-ecdsa                                    0.19.1
-fastapi                                  0.116.1
-filelock                                 3.18.0
-fire                                     0.7.0
-frozenlist                               1.7.0
-fsspec                                   2025.7.0
-googleapis-common-protos                 1.70.0
-h11                                      0.16.0
-hf-xet                                   1.1.7
-httpcore                                 1.0.9
-httpx                                    0.28.1
-huggingface-hub                          0.34.3
-idna                                     3.10
-importlib_metadata                       8.7.0
-Jinja2                                   3.1.6
-jiter                                    0.10.0
-jsonschema                               4.25.0
-jsonschema-specifications                2025.4.1
-llama_api_client                         0.1.2
-llama_stack                              0.2.16      /Users/sudash/Desktop/MyFiles/Sukanta/AIProjects/citi/llama-stack-demo/llama-stack
-llama_stack_client                       0.2.17
-markdown-it-py                           3.0.0
-MarkupSafe                               3.0.2
-mdurl                                    0.1.2
-multidict                                6.6.3
-numpy                                    2.3.2
-openai                                   1.99.1
-opentelemetry-api                        1.36.0
-opentelemetry-exporter-otlp-proto-common 1.36.0
-opentelemetry-exporter-otlp-proto-http   1.36.0
-opentelemetry-proto                      1.36.0
-opentelemetry-sdk                        1.36.0
-opentelemetry-semantic-conventions       0.57b0
-packaging                                25.0
-pandas                                   2.3.1
-pillow                                   11.3.0
-pip                                      25.1.1
-prompt_toolkit                           3.0.51
-propcache                                0.3.2
-protobuf                                 6.31.1
-pyaml                                    25.7.0
-pyasn1                                   0.6.1
-pycparser                                2.22
-pydantic                                 2.11.7
-pydantic_core                            2.33.2
-Pygments                                 2.19.2
-python-dateutil                          2.9.0.post0
-python-dotenv                            1.1.1
-python-jose                              3.5.0
-python-multipart                         0.0.20
-pytz                                     2025.2
-PyYAML                                   6.0.2
-referencing                              0.36.2
-regex                                    2025.7.34
-requests                                 2.32.4
-rich                                     14.1.0
-rpds-py                                  0.26.0
-rsa                                      4.9.1
-six                                      1.17.0
-sniffio                                  1.3.1
-starlette                                0.47.2
-termcolor                                3.1.0
-tiktoken                                 0.10.0
-tqdm                                     4.67.1
-typing_extensions                        4.14.1
-typing-inspection                        0.4.1
-tzdata                                   2025.2
-urllib3                                  2.5.0
-uvicorn                                  0.35.0
-wcwidth                                  0.2.13
-yarl                                     1.20.1
-zipp                                     3.23.0
