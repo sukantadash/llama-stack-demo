@@ -44,4 +44,7 @@ secrets:
   passwordKey: "password"
   # If creating a new secret, this password will be used.
   # It's recommended to use existingSecret or let Helm generate a random password.
-  password: "" 
+  password: ""
+
+postInstall:
+  createVectorExtension: true 
