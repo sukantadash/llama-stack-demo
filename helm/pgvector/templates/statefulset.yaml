@@ -45,14 +45,14 @@ spec:
         - name: pgdata
           {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ include "pgvector.fullname" . }}-pvc
+            claimName: pgdata
           {{- else }}
           emptyDir: {}
           {{- end }}
   {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:
     - metadata:
-        name: {{ include "pgvector.fullname" . }}-pvc
+        name: pgdata
       spec:
         accessModes:
           {{- toYaml .Values.persistence.accessModes | nindent 10 }}
