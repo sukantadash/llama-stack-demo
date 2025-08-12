@@ -231,3 +231,45 @@ except Exception:
     except Exception:
         # If not present, alias to the non-param class (already imported above)
         OpenAIChatCompletionMessageToolCall = ChatCompletionMessageToolCall  # type: ignore
+
+
+
+echo "LLAMA_STACK_CONFIG_DIR=${LLAMA_STACK_CONFIG_DIR:-<unset>}"
+echo "SQLITE_STORE_DIR=${SQLITE_STORE_DIR:-<unset>}"
+echo "HOME=${HOME:-<unset>}"
+python - <<'PY'
+import os, pathlib
+base = pathlib.Path(os.getenv("LLAMA_STACK_CONFIG_DIR", os.path.expanduser("~/.llama/")))
+img = "llama-stack-server"
+targets = {
+  "config_dir": base,
+  "distribs_dir": base/"distributions",
+  "server_dir": base/"distributions"/img,
+  "registry_kvstore_db": base/"distributions"/img/"kvstore.db",
+  "pgvector_registry_db": pathlib.Path(os.getenv("SQLITE_STORE_DIR", (base/"distributions"/"starter").as_posix()))/"pgvector_registry.db",
+}
+for name, p in targets.items():
+    d = p if p.suffix == "" else p.parent
+    print(f"{name}: {p}")
+    print(f"  exists={p.exists()} dir={p.is_dir()} writable={os.access(d, os.W_OK)}")
+PY
+
+
+python - <<'PY'
+import os, pathlib, sys
+def try_write(path):
+    path.mkdir(parents=True, exist_ok=True)
+    test = path/"_perm_test.tmp"
+    try:
+        test.write_text("ok")
+        print("WRITE OK:", test)
+        test.unlink()
+    except Exception as e:
+        print("WRITE FAIL:", path, "->", e)
+config = pathlib.Path(os.getenv("LLAMA_STACK_CONFIG_DIR", os.path.expanduser("~/.llama/")))
+try_write(config)
+try_write(config/"distributions")
+try_write(config/"distributions"/"llama-stack-server")
+pg = pathlib.Path(os.getenv("SQLITE_STORE_DIR", (config/"distributions"/"starter").as_posix()))
+try_write(pg)
+PY
