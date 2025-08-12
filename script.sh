@@ -200,3 +200,34 @@ docker run -d \
   -e POSTGRES_PASSWORD=mysecretpassword \
   -v pgvector_data:/var/lib/pgsql/data \
   my-pgvector-image
+
+
+
+
+
+# Compatibility import for ChatCompletionMessageToolCall across OpenAI SDK versions
+try:
+    from openai.types.chat import ChatCompletionMessageToolCall  # 1.66+
+except Exception:
+    try:
+        from openai.types.chat.chat_completion_message_tool_call import (
+            ChatCompletionMessageToolCall,  # 1.99+
+        )
+    except Exception:
+        # Fallback to Param type as a best-effort for typing/runtime access
+        from openai.types.chat import (
+            ChatCompletionMessageToolCallParam as ChatCompletionMessageToolCall,
+        )
+# Compatibility import for ChatCompletionMessageToolCallParam alias
+try:
+    from openai.types.chat import (
+        ChatCompletionMessageToolCallParam as OpenAIChatCompletionMessageToolCall,
+    )
+except Exception:
+    try:
+        from openai.types.chat.chat_completion_message_tool_call_param import (
+            ChatCompletionMessageToolCallParam as OpenAIChatCompletionMessageToolCall,
+        )
+    except Exception:
+        # If not present, alias to the non-param class (already imported above)
+        OpenAIChatCompletionMessageToolCall = ChatCompletionMessageToolCall  # type: ignore
