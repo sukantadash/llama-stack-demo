@@ -31,6 +31,15 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash"]
+          args: 
+            - -c
+            - |
+              # Create the distributions directory if it doesn't exist
+              mkdir -p /opt/app-root/.llama/distributions/llama-stack-server
+              
+              # Run the llama stack command with the mounted config file
+              llama stack run /opt/app-root/.llama/distributions/llama-stack-server/llama-stack-server-run.yaml --image-type venv --image-name llama-stack-server
           envFrom:
             - configMapRef:
                 name: {{ include "llama-stack-server.fullname" . }}-config
@@ -40,6 +49,10 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          volumeMounts:
+            - name: config-volume
+              mountPath: /opt/app-root/.llama/distributions/llama-stack-server/llama-stack-server-run.yaml
+              subPath: llama-stack-server-run.yaml
           livenessProbe:
             httpGet:
               path: /
@@ -50,6 +63,10 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "llama-stack-server.fullname" . }}-config
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

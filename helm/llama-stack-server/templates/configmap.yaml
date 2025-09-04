@@ -7,4 +7,6 @@ metadata:
     {{- include "llama-stack-server.labels" . | nindent 4 }}
 data:
   {{- toYaml .Values.configmap.data | nindent 2 }}
+  llama-stack-server-run.yaml: |
+{{- .Files.Get "files/llama-stack-server-run.yaml" | nindent 4 }}
 {{- end }} 
