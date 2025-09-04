@@ -31,15 +31,15 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/bin/bash"]
+          command: ["llama"]
           args: 
-            - -c
-            - |
-              # Create the distributions directory if it doesn't exist
-              mkdir -p /opt/app-root/.llama/distributions/llama-stack-server
-              
-              # Run the llama stack command with the mounted config file
-              llama stack run /opt/app-root/.llama/distributions/llama-stack-server/llama-stack-server-run.yaml --image-type venv --image-name llama-stack-server
+            - "stack"
+            - "run"
+            - "/opt/app-root/.llama/distributions/llama-stack-server/llama-stack-server-run.yaml"
+            - "--image-type"
+            - "venv"
+            - "--image-name"
+            - "llama-stack-server"
           envFrom:
             - configMapRef:
                 name: {{ include "llama-stack-server.fullname" . }}-config
