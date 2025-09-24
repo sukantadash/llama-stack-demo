@@ -4,7 +4,7 @@
 
 Our operations team faces the challenges of managing a growing number of OpenShift clusters across multiple environments, often dealing with fragmented documentation, recurring incidents, and the need for repetitive troubleshooting. To alleviate cognitive overload and accelerate incident response, we are developing an advanced agent that integrates Retrieval-Augmented Generation (RAG) for knowledge retrieval, OpenShift control via a Model Context Protocol (MCP), and incident management through Jira integration.
 
-**Product Vision:**
+**Vision:**
 
 This agent aims to provide:
 
@@ -67,7 +67,3 @@ This agent aims to provide:
 2. Set up RAG with internal documentation
 3. Configure appropriate authentication and authorization
 4. Set up monitoring and alerting for the agent's operations
-
-## Any Feedback?
-
-If you have any feedback on this demo series, please contact the AI Operations team or submit feedback through our internal channels.
