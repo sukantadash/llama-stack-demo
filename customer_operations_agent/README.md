@@ -1,4 +1,4 @@
-# Customer Operations Agent Demo
+# Customer Operations Agent
 
 ## Building an Intelligent Operations Agent for Enterprise OpenShift Clusters
 
@@ -15,7 +15,7 @@ This agent aims to provide:
 * **Automated Incident Response:** Analyzing OpenShift pod logs, retrieving relevant solutions via RAG, summarizing the issue, and creating Jira incidents for tracking and resolution.
 * **ServiceNow Integration (Phase 2):** Analyzing existing ServiceNow tickets to identify patterns and provide contextual solutions based on historical incident data.
 
-## Comprehensive Demo Notebook
+## Comprehensive Notebook
 
 **`customer_operations_agent.ipynb`:**
 * **Focus:** Complete end-to-end demonstration of the intelligent operations agent, showcasing all capabilities in a single comprehensive workflow.
