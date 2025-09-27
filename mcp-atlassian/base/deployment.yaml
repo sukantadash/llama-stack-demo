@@ -20,7 +20,7 @@ spec:
         command: ["mcp-atlassian"]
         args:
           - "--transport"
-          - "streamable-http"
+          - "sse"
           - "--port"
           - "8080"
           - "--verbose"
