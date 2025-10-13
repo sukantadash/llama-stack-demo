@@ -273,3 +273,25 @@ try_write(config/"distributions"/"llama-stack-server")
 pg = pathlib.Path(os.getenv("SQLITE_STORE_DIR", (config/"distributions"/"starter").as_posix()))
 try_write(pg)
 PY
+
+------------------------------------------------
+cp deployment/mcp-atlassian/base/secret.yaml.template deployment/mcp-atlassian/base/secret.yaml
+cp deployment/llama-stack/base/llama-stack-secret.yaml.template deployment/llama-stack/base/llama-stack-secret.yaml
+cp Intelligent_operations_agent/config.env.template Intelligent_operations_agent/config.env
+
+ai-accelerator
+./bootstrap.sh
+
+option-7
+
+
+oc apply -k deployment/llama-stack/overlay 
+
+oc project llama-stack
+
+
+oc apply -k deployment/mcp-openshift/overlay 
+
+oc apply -k deployment/mcp-atlassian/overlay 
+
+kustomize build --enable-helm deployment/llama-stack-playground/overlay/sno | oc apply -f-

@@ -1,0 +1,86 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atlassian-mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: atlassian-mcp-server
+  template:
+    metadata:
+      labels:
+        app: atlassian-mcp-server
+    spec:
+      containers:
+      - name: atlassian-mcp-server
+        image: docker.io/mcp/atlassian
+        imagePullPolicy: Always
+        command: ["mcp-atlassian"]
+        args:
+          - "--transport"
+          - "sse"
+          - "--port"
+          - "8080"
+          - "--verbose"
+          - "--no-jira-ssl-verify"
+          - "--no-confluence-ssl-verify"
+        ports:
+        - containerPort: 8080
+        env:
+          - name: JIRA_URL
+            valueFrom:
+              secretKeyRef:
+                name: atlassian-credentials-v1
+                key: JIRA_URL
+          - name: JIRA_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: atlassian-credentials-v1
+                key: JIRA_USERNAME
+          - name: JIRA_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: atlassian-credentials-v1
+                key: JIRA_API_TOKEN
+          - name: JIRA_VERIFY_SSL
+            valueFrom:
+              secretKeyRef:
+                name: atlassian-credentials-v1
+                key: JIRA_VERIFY_SSL
+          - name: CONFLUENCE_URL
+            valueFrom:
+              secretKeyRef:
+                name: atlassian-credentials-v1
+                key: CONFLUENCE_URL
+          - name: CONFLUENCE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: atlassian-credentials-v1
+                key: CONFLUENCE_USERNAME
+          - name: CONFLUENCE_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: atlassian-credentials-v1
+                key: CONFLUENCE_API_TOKEN
+          - name: CONFLUENCE_VERIFY_SSL
+            valueFrom:
+              secretKeyRef:
+                name: atlassian-credentials-v1
+                key: CONFLUENCE_VERIFY_SSL
+        resources:
+          limits:
+            # cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3

@@ -1,0 +1,230 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oom-test-deployment
+  namespace: oom-test
+  labels:
+    app: oom-test
+    purpose: testing-oom-errors
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oom-test
+  template:
+    metadata:
+      labels:
+        app: oom-test
+        purpose: testing-oom-errors
+    spec:
+      containers:
+      - name: oom-test-container
+        image: python:3.12
+        command: ["python3"]
+        args:
+          - -c
+          - |
+            import os
+            import time
+            import sys
+            import threading
+            
+            print("=== OOM Test Pod Started ===")
+            print(f"Pod Name: {os.environ.get('POD_NAME', 'unknown')}")
+            print(f"Namespace: {os.environ.get('NAMESPACE', 'unknown')}")
+            print(f"Memory Limit: {os.environ.get('MEMORY_LIMIT', 'unknown')}")
+            print("=" * 50)
+            
+            # Memory consumption function
+            def consume_memory(size_mb):
+                """Consume specified amount of memory"""
+                try:
+                    data = bytearray(size_mb * 1024 * 1024)  # Allocate memory
+                    print(f"✅ Allocated {size_mb}MB of memory")
+                    return data
+                except MemoryError as e:
+                    print(f"❌ MemoryError: {e}")
+                    return None
+            
+            # Memory monitoring function
+            def monitor_memory():
+                """Monitor memory usage"""
+                while True:
+                    try:
+                        import psutil
+                        memory_info = psutil.virtual_memory()
+                        print(f"📊 Memory Usage: {memory_info.percent:.1f}% ({memory_info.used // (1024*1024)}MB used)")
+                    except ImportError:
+                        print("📊 Memory monitoring not available (psutil not installed)")
+                    except Exception as e:
+                        print(f"❌ Memory monitoring error: {e}")
+                    time.sleep(5)
+            
+            # Start memory monitoring in background
+            try:
+                monitor_thread = threading.Thread(target=monitor_memory, daemon=True)
+                monitor_thread.start()
+            except Exception as e:
+                print(f"⚠️ Could not start memory monitoring: {e}")
+            
+            # Gradual memory consumption to trigger OOM
+            memory_blocks = []
+            sizes = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]  # MB
+            
+            print("🚀 Starting gradual memory consumption...")
+            
+            for i, size in enumerate(sizes):
+                print(f"\n--- Step {i+1}: Allocating {size}MB ---")
+                
+                # Allocate memory
+                block = consume_memory(size)
+                if block is not None:
+                    memory_blocks.append(block)
+                    print(f"✅ Total allocated: {len(memory_blocks) * size}MB")
+                else:
+                    print("❌ Failed to allocate memory - OOM imminent!")
+                    break
+                
+                # Wait a bit between allocations
+                time.sleep(3)
+            
+            print("\n🔄 Continuing memory consumption until OOM...")
+            
+            # Keep consuming memory until OOM
+            try:
+                while True:
+                    # Try to allocate more memory
+                    block = consume_memory(50)
+                    if block is not None:
+                        memory_blocks.append(block)
+                        print(f"✅ Total blocks: {len(memory_blocks)}")
+                    else:
+                        print("❌ Memory allocation failed - OOM!")
+                        break
+                    
+                    time.sleep(2)
+            except Exception as e:
+                print(f"❌ Exception during memory consumption: {e}")
+            
+            print("💀 Pod terminated due to OOM")
+            sys.exit(1)
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"  # Very low limit to trigger OOM quickly
+            cpu: "200m"
+        env:
+        - name: MEMORY_LIMIT
+          value: "128Mi"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        livenessProbe:
+          exec:
+            command:
+            - python3
+            - -c
+            - "print('Liveness check')"
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - python3
+            - -c
+            - "print('Readiness check')"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oom-test-service
+  namespace: oom-test
+  labels:
+    app: oom-test
+spec:
+  selector:
+    app: oom-test
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oom-test-config
+  namespace: oom-test
+  labels:
+    app: oom-test
+data:
+  memory_script.py: |
+    #!/usr/bin/env python3
+    """
+    OOM test script for intelligent operations agent testing
+    """
+    import os
+    import time
+    import sys
+    
+    def main():
+        print("=== OOM Test Script ===")
+        print("This script will consume memory until OOM")
+        
+        memory_blocks = []
+        size_mb = 10
+        
+        try:
+            while True:
+                print(f"Allocating {size_mb}MB...")
+                block = bytearray(size_mb * 1024 * 1024)
+                memory_blocks.append(block)
+                print(f"Total allocated: {len(memory_blocks) * size_mb}MB")
+                time.sleep(1)
+                size_mb += 5  # Increase allocation size
+        except MemoryError:
+            print("OOM Error occurred!")
+            sys.exit(1)
+        except Exception as e:
+            print(f"Error: {e}")
+            sys.exit(1)
+    
+    if __name__ == "__main__":
+        main()
+  README.md: |
+    # OOM Test Pod
+    
+    This pod is designed to trigger Out of Memory (OOM) errors for testing
+    the intelligent operations agent's error detection and analysis capabilities.
+    
+    ## Expected Behavior
+    
+    1. Pod starts and begins consuming memory
+    2. Memory usage gradually increases
+    3. Pod hits memory limit and gets OOMKilled
+    4. Pod restarts and repeats the cycle
+    
+    ## Error Patterns to Detect
+    
+    - OOMKilled events in pod status
+    - Memory limit exceeded errors in logs
+    - Pod restart loops
+    - Resource exhaustion warnings
+    
+    ## Testing the Intelligent Operations Agent
+    
+    The agent should be able to:
+    1. Detect the OOM errors in pod logs
+    2. Identify the root cause (memory limit too low)
+    3. Search for solutions in Confluence
+    4. Create a Jira incident with recommendations

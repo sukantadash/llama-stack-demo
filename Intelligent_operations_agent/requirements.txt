@@ -1,0 +1,27 @@
+# Intelligent Operations Agent Requirements
+# Core dependencies
+llama-stack==0.2.6
+llama-stack-client==0.2.7
+
+# Environment and configuration
+python-dotenv==1.1.0
+
+# Data processing and utilities
+pandas==2.2.3
+numpy==2.2.6
+rich==14.0.0
+termcolor==3.1.0
+
+# HTTP and API clients
+requests==2.32.3
+httpx==0.28.1
+
+# Jupyter notebook support
+ipykernel==6.29.5
+ipython==9.2.0
+jupyter_client==8.6.3
+
+# Additional utilities
+click==8.2.1
+pydantic==2.11.5
+typing-extensions==4.13.2
