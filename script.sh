@@ -295,3 +295,114 @@ oc apply -k deployment/mcp-openshift/overlay
 oc apply -k deployment/mcp-atlassian/overlay 
 
 kustomize build --enable-helm deployment/llama-stack-playground/overlay/sno | oc apply -f-
+
+
+oc apply -k deployment/web-terminal/operator/overlays/fast
+
+
+------------------------------------------------
+#cluster1
+oc new-project llama-stack
+
+oc create sa mcp-multicluster-sa -n llama-stack
+
+oc adm policy add-cluster-role-to-user cluster-admin -z mcp-multicluster-sa -n llama-stack
+
+oc apply -f - <<'EOF'
+apiVersion: v1
+kind: Secret
+metadata:
+  name:  mcp-multicluster-sa-token
+  annotations:
+    kubernetes.io/service-account.name:  mcp-multicluster-sa
+type: kubernetes.io/service-account-token
+EOF
+
+
+ # Get token name
+TOKEN_VALUE1=$(oc get secret mcp-multicluster-sa-token -o jsonpath='{.data.token}' | base64 --decode)
+echo "Token_value1: ${TOKEN_VALUE1}"
+CLUSTER1_NAME=$(echo $(oc whoami --show-console) | sed 's/https:\/\/console-openshift-console.apps/api/')
+echo Cluster1_name: ${CLUSTER1_NAME}
+
+openssl s_client -showcerts -connect ${CLUSTER2_NAME}:6443 </dev/null 2>/dev/null | \
+  openssl x509 -outform PEM > cluster1-ca.crt
+
+
+#cluster2
+oc project llama-stack
+
+oc create sa mcp-multicluster-sa -n llama-stack
+
+oc adm policy add-cluster-role-to-user cluster-admin -z mcp-multicluster-sa -n llama-stack
+
+oc apply -f - <<'EOF'
+apiVersion: v1
+kind: Secret
+metadata:
+  name:  mcp-multicluster-sa-token
+  annotations:
+    kubernetes.io/service-account.name:  mcp-multicluster-sa
+type: kubernetes.io/service-account-token
+EOF
+
+
+ # Get token name
+TOKEN_VALUE2=$(oc get secret mcp-multicluster-sa-token -o jsonpath='{.data.token}' | base64 --decode)
+echo "Token_value2: ${TOKEN_VALUE2}"
+CLUSTER2_NAME=$(echo $(oc whoami --show-console) | sed 's/https:\/\/console-openshift-console.apps/api/')
+echo Cluster2_name: ${CLUSTER2_NAME}
+
+openssl s_client -showcerts -connect ${CLUSTER2_NAME}:6443 </dev/null 2>/dev/null | \
+  openssl x509 -outform PEM > cluster2-ca.crt
+
+
+#Hub cluster
+#cluster1
+
+oc config set-cluster cluster1 \
+  --server=https://${CLUSTER1_NAME}:6443 \
+  --certificate-authority=cluster1-ca.crt \
+  --embed-certs=true
+
+oc config set-credentials cluster1-sa \
+  --token=$TOKEN_VALUE1
+
+oc config set-context cluster1-context \
+  --cluster=cluster1 \
+  --user=cluster1-sa \
+  --namespace=llama-stack
+
+#cluster2
+
+oc config set-cluster cluster2 \
+  --server=https://${CLUSTER2_NAME}:6443 \
+  --certificate-authority=cluster2-ca.crt \
+  --embed-certs=true
+
+oc config set-credentials cluster2-sa \
+  --token=$TOKEN_VALUE2
+
+oc config set-context cluster2-context \
+  --cluster=cluster2 \
+  --user=cluster2-sa \
+  --namespace=llama-stack
+
+
+#testing
+oc config get-contexts
+
+oc --context=cluster1-context get nodes
+oc --context=cluster2-context get nodes
+
+oc config use-context cluster1-context
+oc get projects
+
+oc config use-context cluster2-context
+oc get projects
+
+
+------------------------------------------------
+MCP Inspect
+
+oc apply -k deployment/mcp-inspector/overlay

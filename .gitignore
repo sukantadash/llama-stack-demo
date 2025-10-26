@@ -7,6 +7,9 @@
 config.env
 *.config.env
 
+# Working directories and development files
+**/working/
+
 # Kubernetes Secrets and Sensitive YAML
 **/secret.yaml
 **/secrets.yaml
