@@ -7,10 +7,11 @@ metadata:
     app: keycloak
 spec:
   instances: 1
+  # ⚠️ PRODUCTION: Update hostname to your production domain
   hostname:
     hostname: keycloak-admin.apps.cluster-95nrt.95nrt.sandbox5429.opentlc.com
-    strict: false
-    strictBackchannel: false
+    strict: true                    # ✅ PRODUCTION: Enforce hostname validation
+    strictBackchannel: true        # ✅ PRODUCTION: Validate backchannel calls
   http:
     httpEnabled: true
   db:
@@ -28,6 +29,6 @@ spec:
     - name: proxy-headers
       value: xforwarded
     - name: hostname-strict
-      value: "false"
+      value: "true"                 # ✅ PRODUCTION: Strict hostname checking
     - name: hostname-strict-https
-      value: "false"
+      value: "true"                 # ✅ PRODUCTION: Enforce HTTPS
