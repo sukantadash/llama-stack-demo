@@ -7,5 +7,5 @@ spec:
   name: rhbk-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
-  channel: stable-v22
+  channel: stable-v26
   installPlanApproval: Automatic

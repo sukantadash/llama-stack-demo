@@ -25,8 +25,8 @@ spec:
       name: postgresql-credentials
       key: password
   additionalOptions:
-    - name: proxy
-      value: edge
+    - name: proxy-headers
+      value: xforwarded
     - name: hostname-strict
       value: "false"
     - name: hostname-strict-https
