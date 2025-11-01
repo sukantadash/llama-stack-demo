@@ -2,8 +2,8 @@
 replicaCount: 1
 
 image:
-  repository: quay.io/eformat/streamlit_client  # quay.io/rh-aiservices-bu/llama-stack-playground
-  tag: "0.2.15" # "0.2.12"  # "0.2.4"  # "0.2.1"
+  repository: quay.io/sudash/streamlit-client-keycloak  # quay.io/rh-aiservices-bu/llama-stack-playground
+  tag: "latest" # "0.2.12"  # "0.2.4"  # "0.2.1"
   pullPolicy: Always
 
 imagePullSecrets: []
@@ -37,10 +37,9 @@ securityContext:
 
 service:
   type: ClusterIP
-  port: 80
-  targetPort: 8501
-  annotations:
-    service.alpha.openshift.io/serving-cert-secret-name: proxy-tls
+  port: 8080
+  targetPort: 4180  # OAuth proxy HTTP port
+  annotations: {}
 
 route:
   enabled: true
@@ -48,7 +47,7 @@ route:
   host: ""
   tls:
     enabled: true
-    termination: reencrypt
+    termination: edge  # Edge termination when using HTTP oauth2-proxy
     insecureEdgeTerminationPolicy: Redirect
 
 ingress:
@@ -141,3 +140,21 @@ networkPolicy:
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
+
+# Keycloak OAuth Proxy Configuration
+keycloak:
+  # Enable Keycloak authentication
+  enabled: true
+  url: "https://keycloak-admin.apps.cluster-95nrt.95nrt.sandbox5429.opentlc.com"
+  realm: "llama-realm"
+  # ✅ Use single client for all components
+  clientId: "llama-stack"
+  clientSecret: "11sP0pt1pxSzFnSqdrf1iiXBZCqx7j5wTW4+/8Y2zio="
+  cookieSecret: "UlMiEg1FiUNXgErezKY5Rld2cG8QYn8y"
+  # OAuth2 callback URL - should match your Keycloak client configuration
+  # Update this with your actual route URL after deployment
+  # Format: https://your-route-hostname
+  redirectUrl: "https://llama-stack-playground-llama-stack.apps.cluster-95nrt.95nrt.sandbox5429.opentlc.com"
+
+# Namespace
+namespace: "llama-stack"

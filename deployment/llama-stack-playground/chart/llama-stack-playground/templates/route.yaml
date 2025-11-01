@@ -18,7 +18,7 @@ spec:
     name: llama-stack-playground
     weight: 100
   port:
-    targetPort: proxy
+    targetPort: {{ if .Values.keycloak.enabled }}oauth-http{{ else }}proxy{{ end }}
   {{- if .Values.route.tls.enabled }}
   tls:
     termination: {{ .Values.route.tls.termination }}

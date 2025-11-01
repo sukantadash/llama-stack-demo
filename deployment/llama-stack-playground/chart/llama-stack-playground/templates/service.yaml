@@ -11,8 +11,8 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - name: proxy
-      port: 443
-      targetPort: 8443
+    - name: {{ if .Values.keycloak.enabled }}oauth-http{{ else }}proxy{{ end }}
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
   selector:
     {{- include "llama-stack-playground.selectorLabels" . | nindent 4 }}

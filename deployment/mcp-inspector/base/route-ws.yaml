@@ -6,6 +6,11 @@ metadata:
   namespace: mcp-inspector
   labels:
     app: mcp-inspector
+  annotations:
+    haproxy.router.openshift.io/balance: source
+    haproxy.router.openshift.io/disable_cookies: 'false'
+    haproxy.router.openshift.io/rewrite-target: /
+    haproxy.router.openshift.io/timeout: 3600s    
 spec:
   to:
     kind: Service

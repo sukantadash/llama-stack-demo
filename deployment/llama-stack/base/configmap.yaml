@@ -6,6 +6,24 @@ data:
   run.yaml: |
     version: '2'
     image_name: remote-vllm
+    server:
+      port: 8321
+      host: ["0.0.0.0"]
+      # Enable JWT authentication with Keycloak
+      auth:
+        provider_config:
+          type: "oauth2_token"
+          issuer: "https://keycloak-admin.apps.cluster-95nrt.95nrt.sandbox5429.opentlc.com/auth/realms/llama-realm"
+          audience: "llama-stack"
+          verify_tls: true
+          claims_mapping:
+            sub: "roles"
+            preferred_username: "roles"
+            groups: "teams"
+            email: "email"
+          jwks:
+            uri: "https://keycloak-admin.apps.cluster-95nrt.95nrt.sandbox5429.opentlc.com/auth/realms/llama-realm/protocol/openid-connect/certs"
+            key_recheck_period: 3600
     apis:
     - agents
     - datasetio

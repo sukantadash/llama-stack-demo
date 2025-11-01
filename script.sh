@@ -289,10 +289,21 @@ oc apply -k deployment/llama-stack/overlay
 
 oc project llama-stack
 
+#to generate kubeconfig for multicluster update the tokens manually in the secret
+cd deployment/mcp-openshift
+./setup-multicluster-kubeconfig.sh
 
 oc apply -k deployment/mcp-openshift/overlay 
 
 oc apply -k deployment/mcp-atlassian/overlay 
+
+------------------------------------------------
+kustomize build --enable-helm deployment/llama-stack-playground/overlay/sno | oc delete -f-
+
+cookieSecret=$(openssl rand -base64 24)  # 24 bytes for AES (32 chars base64)
+clientSecret="11sP0pt1pxSzFnSqdrf1iiXBZCqx7j5wTW4+/8Y2zio=" #this is the client secret for the llama-stack client realm in keycloak
+sed -i '' 's|clientSecret: "CHANGE_ME_CLIENT_SECRET"|clientSecret: "'${clientSecret}'"|g' deployment/llama-stack-playground/chart/llama-stack-playground/values.yaml
+sed -i '' 's|cookieSecret: "GENERATE_RANDOM_BASE64_STRING"|cookieSecret: "'${cookieSecret}'"|g' deployment/llama-stack-playground/chart/llama-stack-playground/values.yaml
 
 kustomize build --enable-helm deployment/llama-stack-playground/overlay/sno | oc apply -f-
 
@@ -325,7 +336,7 @@ echo "Token_value1: ${TOKEN_VALUE1}"
 CLUSTER1_NAME=$(echo $(oc whoami --show-console) | sed 's/https:\/\/console-openshift-console.apps/api/')
 echo Cluster1_name: ${CLUSTER1_NAME}
 
-openssl s_client -showcerts -connect ${CLUSTER2_NAME}:6443 </dev/null 2>/dev/null | \
+openssl s_client -showcerts -connect ${CLUSTER1_NAME}:6443 </dev/null 2>/dev/null | \
   openssl x509 -outform PEM > cluster1-ca.crt
 
 
@@ -374,6 +385,7 @@ oc config set-context cluster1-context \
   --namespace=llama-stack
 
 #cluster2
+#login to cluster1
 
 oc config set-cluster cluster2 \
   --server=https://${CLUSTER2_NAME}:6443 \
@@ -390,7 +402,7 @@ oc config set-context cluster2-context \
 
 
 #testing
-oc config get-contexts
+oc config get-contexts -n llama-stack
 
 oc --context=cluster1-context get nodes
 oc --context=cluster2-context get nodes
@@ -406,3 +418,22 @@ oc get projects
 MCP Inspect
 
 oc apply -k deployment/mcp-inspector/overlay
+
+------------------------------------------------
+
+cd /deployment/redhat-bk
+./deploy-keycloak-operator.sh
+
+
+Set the redirect URL after deployment:
+Update Keycloak client with the correct redirect URI
+
+
+#for cleanup
+./cleanup-keycloak-operator.sh
+
+
+------------------------------------------------
+cd llama-stack/llama_stack/distribution/ui
+podman build --platform linux/amd64 -t quay.io/sudash/streamlit-client-keycloak:latest .
+podman push quay.io/sudash/streamlit-client-keycloak:latest

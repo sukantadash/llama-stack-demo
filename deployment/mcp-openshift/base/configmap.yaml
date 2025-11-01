@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ocp-mcp-server-config
+data:
+  config.toml: |
+    port = "8000"
+    cluster_provider_strategy = "kubeconfig"
+    
+    log_level = 9
+    list_output = "table"
+    toolsets = ["core", "config", "helm"]
+    read_only = false
+    disable_destructive = false
+

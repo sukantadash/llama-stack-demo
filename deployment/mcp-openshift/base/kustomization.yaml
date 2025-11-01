@@ -4,3 +4,5 @@ resources:
   - rolebinding.yaml
   - service.yaml
   - serviceaccount.yaml
+  - kubeconfig-secret.yaml
+  - configmap.yaml

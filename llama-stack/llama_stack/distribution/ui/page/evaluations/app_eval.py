@@ -8,9 +8,14 @@ import json
 
 import pandas as pd
 import streamlit as st
+import sys
+import os
 
-from llama_stack.distribution.ui.modules.api import llama_stack_api
-from llama_stack.distribution.ui.modules.utils import process_dataset
+# Add parent directories to path for imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from modules.api import llama_stack_api
+from modules.utils import process_dataset
 
 
 def application_evaluation_page():

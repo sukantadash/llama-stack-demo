@@ -6,8 +6,8 @@ metadata:
 spec:
   keycloakCRName: keycloak
   realm:
-    realm: "demo-realm"
-    displayName: "Demo Realm"
+    realm: "llama-realm"
+    displayName: "Llama Stack Realm"
     enabled: true
     loginWithEmailAllowed: true
     duplicateEmailsAllowed: false
@@ -24,40 +24,38 @@ spec:
       - "offline_access"
       - "uma_authorization"
     clients:
-      - clientId: "demo-client"
-        name: "Demo Client"
-        description: "Demo application client"
+      # Llama Stack Client - THE ONLY CLIENT for all components
+      # Used by: Playground UI, Llama Stack Server, MCP Server, Kubernetes
+      - clientId: "llama-stack"
+        name: "Llama Stack Client"
+        description: "Single OAuth client for all Llama Stack and Kubernetes components"
         enabled: true
         clientAuthenticatorType: "client-secret"
         secret: "CHANGE_ME_IN_PRODUCTION"
-        # ⚠️ NOTE: This is a development-only client secret.
-        # Generate a secure random secret for production use!
+        # ✅ Enable standard flow for user login via playground
         standardFlowEnabled: true
         implicitFlowEnabled: false
+        # ✅ Enable direct grants for testing
         directAccessGrantsEnabled: true
+        # ✅ Enable service accounts for service-to-service auth
         serviceAccountsEnabled: true
         publicClient: false
         protocol: "openid-connect"
         attributes:
-          "saml.assertion.signature": "false"
-          "saml.force.post.binding": "false"
-          "saml.multivalued.roles": "false"
-          "saml.encrypt": "false"
-          "saml.server.signature": "false"
-          "saml.server.signature.keyinfo.ext": "false"
-          "exclude.session.state.from.auth.response": "false"
-          "saml_force_name_id_format": "false"
-          "saml.client.signature": "false"
-          "tls.client.certificate.bound.access.tokens": "false"
-          "saml.authnstatement": "false"
-          "display.on.consent.screen": "false"
-          "saml.onetimeuse.condition": "false"
+          "access.token.lifespan": "900" # 15 minutes
+          "client.session.idle.timeout": "1800" # 30 minutes
+          "client.session.max.lifespan": "36000" # 10 hours
+        # Playground redirect URIs
         redirectUris:
-          - "http://localhost:8080/*"
+          - "https://playground.example.com/*"
+          - "http://localhost:8501/*"
           - "https://localhost:8443/*"
+        # CORS origins
         webOrigins:
-          - "http://localhost:8080"
+          - "https://playground.example.com"
+          - "http://localhost:8501"
           - "https://localhost:8443"
+          - "*" # Allow all origins (adjust for production)
         defaultClientScopes:
           - "web-origins"
           - "role_list"
@@ -68,13 +66,12 @@ spec:
           - "address"
           - "phone"
           - "offline_access"
-          - "microprofile-jwt"
     users:
-      - username: "demo-user"
+      - username: "testuser"
         enabled: true
         emailVerified: true
-        email: "demo-user@example.com"
-        firstName: "Demo"
+        email: "testuser@example.com"
+        firstName: "Test"
         lastName: "User"
         credentials:
           - type: "password"
@@ -85,10 +82,15 @@ spec:
         realmRoles:
           - "offline_access"
           - "uma_authorization"
-        clientRoles:
-          demo-client:
-            - "view-profile"
-            - "manage-account"
+        groups:
+          - "llama-developers"
+    
+    groups:
+      - name: "llama-developers"
+        path: "/llama-developers"
+        realmRoles:
+          - "offline_access"
+          - "uma_authorization"
     roles:
       realm:
         - name: "demo-role"

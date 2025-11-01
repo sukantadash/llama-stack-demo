@@ -8,7 +8,7 @@ resources:
   - deployment.yaml
   - service.yaml
   - route.yaml
-
+  - route-ws.yaml
 labels:
   - pairs:
       app.kubernetes.io/name: mcp-inspector

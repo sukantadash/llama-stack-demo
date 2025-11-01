@@ -142,3 +142,10 @@ docker-compose.override.yml
 # Kubernetes
 kubeconfig
 *.kubeconfig
+
+# Multicluster working directory (contains tokens, kubeconfig, and CA certs)
+**/Multicluster/
+**/multicluster/
+**/*-token.txt
+**/*-token-fresh.txt
+**/*-ca.crt

@@ -19,12 +19,38 @@ spec:
       serviceAccountName: ocp-mcp
       containers:
       - name: ocp-mcp-server
-        image: quay.io/eformat/kubernetes-mcp-server:latest  # quay.io/hveeradh/ocp-mcp-server:latest
+        image: quay.io/sudash/kubernetes-mcp-server:v0.0.53-config  # Built from source with --config support
         imagePullPolicy: Always
         ports:
           - name: http
             containerPort: 8000
             protocol: TCP
+        env:
+          - name: OAUTH_ISSUER_URL
+            value: "https://keycloak-admin.apps.cluster-95nrt.95nrt.sandbox5429.opentlc.com/auth/realms/llama-realm"
+          - name: OAUTH_AUDIENCE
+            value: "llama-stack"
+          - name: VALIDATE_TOKEN
+            value: "false"  # Kubernetes validates the JWT
         command: ["./kubernetes-mcp-server"]
-        args: ["--sse-port", "8000"]
+        args: 
+          - "--config"
+          - "/etc/mcp-server/config.toml"
+          - "--kubeconfig"
+          - "/etc/kubeconfig/config"
+        volumeMounts:
+        - name: kubeconfig
+          mountPath: /etc/kubeconfig/config
+          subPath: config
+          readOnly: true
+        - name: mcp-config
+          mountPath: /etc/mcp-server
+          readOnly: true
         resources: {}
+      volumes:
+      - name: kubeconfig
+        secret:
+          secretName: mcp-multicluster-kubeconfig
+      - name: mcp-config
+        configMap:
+          name: ocp-mcp-server-config

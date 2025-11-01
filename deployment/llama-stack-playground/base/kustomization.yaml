@@ -7,3 +7,4 @@ helmCharts:
     includeCRDs: true
     releaseName: llama-stack-playground
     valuesFile: values.yaml
+    version: "1.0.0"
