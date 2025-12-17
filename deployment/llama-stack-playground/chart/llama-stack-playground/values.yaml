@@ -2,8 +2,8 @@
 replicaCount: 1
 
 image:
-  repository: quay.io/eformat/streamlit_client  # quay.io/rh-aiservices-bu/llama-stack-playground
-  tag: "0.2.15" # "0.2.12"  # "0.2.4"  # "0.2.1"
+  repository: image-registry.openshift-image-registry.svc:5000/llama-stack/llama-stack-ui
+  tag: "0.3.x" # "0.2.12"  # "0.2.4"  # "0.2.1"
   pullPolicy: Always
 
 imagePullSecrets: []
@@ -38,7 +38,7 @@ securityContext:
 service:
   type: ClusterIP
   port: 80
-  targetPort: 8501
+  targetPort: 8322
   annotations:
     service.alpha.openshift.io/serving-cert-secret-name: proxy-tls
 
@@ -113,9 +113,9 @@ playground:
 
 # Environment variables
 env:
-  STREAMLIT_SERVER_PORT: "8501"
-  STREAMLIT_SERVER_ADDRESS: "0.0.0.0"
-  STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
+  PORT: "8322"
+  HOSTNAME: "0.0.0.0"
+  LLAMA_STACK_BACKEND_URL: "http://llamastack-with-config-service:8321"
 
 # Network Policies
 networkPolicy:
@@ -127,7 +127,7 @@ networkPolicy:
             name: openshift-ingress
       ports:
       - protocol: TCP
-        port: 8501
+        port: 8322
   egress:
     - to:
       - podSelector:

@@ -6,9 +6,13 @@ data:
   run.yaml: |
     version: '2'
     image_name: remote-vllm
+    server:
+      port: 8321
+      host: "0.0.0.0"
     apis:
     - agents
     - datasetio
+    - files
     - eval
     - inference
     - safety
@@ -21,21 +25,21 @@ data:
         provider_type: remote::vllm
         config:
           url: ${env.LLAMA3B_URL}
-          max_tokens: 128000
+          max_tokens: 4096
           api_token: ${env.LLAMA_TOKEN}
           tls_verify: false
       - provider_id: llama-17b
         provider_type: remote::vllm
         config:
           url: ${env.LLAMA17B_URL}
-          max_tokens: 128000
+          max_tokens: 4096
           api_token: ${env.LLAMA17B_TOKEN}
           tls_verify: false
       - provider_id: deepseek
         provider_type: remote::vllm
         config:
           url: ${env.DEEPSEEK_URL}
-          max_tokens: 128000
+          max_tokens: 4096
           api_token: ${env.DEEPSEEK_TOKEN}
           tls_verify: false          
       - provider_id: sentence-transformers
@@ -70,6 +74,14 @@ data:
             type: sqlite
             namespace: null
             db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/rh}/meta_reference_eval.db
+      files:
+      - provider_id: meta-reference-files
+        provider_type: inline::localfs
+        config:
+          metadata_store:
+            db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/rh}/files_metadata.db
+            type: sqlite
+          storage_dir: ${env.SQLITE_STORE_DIR:~/.llama/distributions/rh}/files            
       datasetio:
       - provider_id: huggingface
         provider_type: remote::huggingface
