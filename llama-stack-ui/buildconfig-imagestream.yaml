@@ -1,0 +1,45 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: llama-stack-playground-build-imagestream
+  namespace: llama-stack  # Ensure this matches your project
+  labels:
+    app: llama-stack-playground
+    component: build
+spec:
+  # Build triggers
+  triggers:
+    - type: ConfigChange
+  
+  # UPDATED: Output to Internal Registry (Fixes Quay.io 429 Errors)
+  output:
+    to:
+      kind: ImageStreamTag
+      name: llama-stack-playground:latest
+    # Note: 'pushSecret' is removed because OpenShift handles internal authentication automatically.
+  
+  # Resource limits for the build
+  resources:
+    limits:
+      cpu: "2"
+      memory: 4Gi
+    requests:
+      cpu: "1"
+      memory: 2Gi
+  
+  successfulBuildsHistoryLimit: 3
+  failedBuildsHistoryLimit: 3
+  
+  # Docker build strategy
+  strategy:
+    type: Docker
+    dockerStrategy:
+      # Ensure your local file is named 'Containerfile'. If it's 'Dockerfile', change this line.
+      dockerfilePath: Containerfile
+  
+  # Source configuration (Binary means you will upload code from your CLI)
+  source:
+    type: Binary
+    binary: {}
+  
+  runPolicy: Serial

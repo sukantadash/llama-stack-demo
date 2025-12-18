@@ -1,0 +1,14 @@
+FROM python:3.10-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+# UPDATED: Add 'fire' to the install list
+RUN pip install --no-cache-dir llama-stack-client streamlit fire
+
+# Expose the UI port
+EXPOSE 8501
+
+# Run the playground
+ENTRYPOINT ["llama-stack-client", "playground"]
+CMD ["--host", "0.0.0.0", "--port", "8501"]

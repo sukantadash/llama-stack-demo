@@ -10,13 +10,11 @@ spec:
   replicas: 1
   server:
     containerSpec:
-      name: llama-stack
-      port: 8321
+      command:
+        - /bin/sh
+        - '-c'
+        - llama stack run /etc/llama-stack/run.yaml
       env:
-        - name: MAX_TOKENS
-          value: '128000'
-        - name: VLLM_MAX_TOKENS
-          value: '128000'
         - name: LLAMA3B_URL
           value: 'https://llama-3-2-3b-maas-apicast-production.apps.prod.rhoai.rh-aiservices-bu.com:443/v1'
         - name: LLAMA3B_MODEL
@@ -43,15 +41,22 @@ spec:
           valueFrom:
             secretKeyRef:
               name: llama-stack-secret
-              key: deepseek-token
-        - name: VLLM_API_TOKEN
-          value: fake
-        - name: CUSTOM_TIKTOKEN_CACHE_DIR
-          value: /app/cache
+              key: deepseek-token      
         - name: MILVUS_DB_PATH
-          value: milvus.db
-        - name: LLAMA_STACK_LOGGING
-          value: all=debug
+          value: ~/.llama/milvus.db
+        - name: FMS_ORCHESTRATOR_URL
+          value: 'http://localhost'
+        - name: LLAMA_STACK_CONFIG_DIR
+          value: /opt/app-root/src/.llama/distributions/rh/
+      name: llama-stack
+      port: 8321
+      resources:
+        limits:
+          cpu: '2'
+          memory: 12Gi
+        requests:
+          cpu: 250m
+          memory: 500Mi
     distribution:
       name: rh-dev
     userConfig:

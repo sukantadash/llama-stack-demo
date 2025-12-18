@@ -275,6 +275,8 @@ try_write(pg)
 PY
 
 ------------------------------------------------
+
+
 cp deployment/mcp-atlassian/base/secret.yaml.template deployment/mcp-atlassian/base/secret.yaml
 cp deployment/llama-stack/base/llama-stack-secret.yaml.template deployment/llama-stack/base/llama-stack-secret.yaml
 cp Intelligent_operations_agent/config.env.template Intelligent_operations_agent/config.env
