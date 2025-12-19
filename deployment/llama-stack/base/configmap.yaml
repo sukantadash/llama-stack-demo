@@ -128,19 +128,11 @@ data:
     metadata_store:
       type: sqlite
       db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/rh}/registry.db
-    models:
-    - metadata: {}
-      model_id: ${env.LLAMA3B_MODEL}
-      provider_id: llama-3b
-      model_type: llm    
+    models:   
     - metadata: {}
       model_id: ${env.LLAMA17B_MODEL}
       provider_id: llama-17b
       model_type: llm
-    - metadata: {}
-      model_id: ${env.DEEPSEEK_MODEL}
-      provider_id: deepseek
-      model_type: llm      
     - metadata:
         embedding_dimension: 384
       model_id: all-MiniLM-L6-v2

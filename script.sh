@@ -297,3 +297,7 @@ oc apply -k deployment/mcp-openshift/overlay
 oc apply -k deployment/mcp-atlassian/overlay 
 
 kustomize build --enable-helm deployment/llama-stack-playground/overlay/sno | oc apply -f-
+
+
+# Extra commands to install postgresql vector db 
+helm install pgvector ./deployment/pgvector/
