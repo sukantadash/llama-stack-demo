@@ -42,7 +42,7 @@ spec:
             - --https-address=:8443
             - --provider=openshift
             - --openshift-service-account=llama-stack-playground
-            - --upstream=http://localhost:8322
+            - --upstream=http://localhost:8501
             - --tls-cert=/etc/tls/private/tls.crt
             - --tls-key=/etc/tls/private/tls.key
             - --cookie-secret=SECRET
@@ -55,7 +55,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-          - containerPort: 8322
+          - containerPort: 8501
             name: http
             protocol: TCP
           env:
@@ -63,6 +63,8 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            - name: LLAMA_STACK_ENDPOINT
+              value: {{ .Values.playground.llamaStackUrl | quote }}
             - name: DEFAULT_MODEL
               value: {{ .Values.playground.defaultModel | quote }}
           livenessProbe:
