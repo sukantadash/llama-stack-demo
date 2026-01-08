@@ -4,3 +4,4 @@ resources:
   - rolebinding.yaml
   - service.yaml
   - serviceaccount.yaml
+  - route.yaml

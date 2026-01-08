@@ -4,3 +4,4 @@ resources:
   - configmap.yaml
   - llama-stack.yaml
   - llama-stack-secret.yaml
+  - route.yaml

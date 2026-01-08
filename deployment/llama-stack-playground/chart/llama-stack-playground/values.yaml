@@ -2,8 +2,8 @@
 replicaCount: 1
 
 image:
-  repository: quay.io/eformat/streamlit_client # quay.io/rh-aiservices-bu/llama-stack-playground
-  tag: "0.2.15" # "0.2.12"  # "0.2.4"  # "0.2.1"
+  repository: image-registry.openshift-image-registry.svc:5000/llama-stack/llama-stack-playground  # Built for amd64
+  tag: "latest"
   pullPolicy: Always
 
 imagePullSecrets: []

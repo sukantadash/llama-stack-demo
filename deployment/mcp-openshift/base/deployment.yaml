@@ -19,7 +19,7 @@ spec:
       serviceAccountName: ocp-mcp
       containers:
       - name: ocp-mcp-server
-        image: quay.io/eformat/kubernetes-mcp-server:latest  # quay.io/hveeradh/ocp-mcp-server:latest
+        image: quay.io/sudash/kubernetes-mcp-server:v0.0.53-config  # quay.io/hveeradh/ocp-mcp-server:latest
         imagePullPolicy: Always
         ports:
           - name: http
