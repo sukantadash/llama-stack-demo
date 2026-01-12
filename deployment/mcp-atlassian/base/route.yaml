@@ -1,0 +1,18 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: atlassian-mcp-server
+  labels:
+    app: atlassian-mcp-server
+spec:
+  to:
+    kind: Service
+    name: atlassian-mcp-server
+    weight: 100
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

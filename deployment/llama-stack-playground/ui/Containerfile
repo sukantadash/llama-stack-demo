@@ -1,0 +1,19 @@
+# More info on playground configuration can be found here:
+# https://llama-stack.readthedocs.io/en/latest/playground
+
+FROM python:3.12-slim
+WORKDIR /app
+# Create the package directory structure
+RUN mkdir -p /app/llama_stack/core/ui
+# Create __init__.py files for the package structure
+RUN touch /app/llama_stack/__init__.py /app/llama_stack/core/__init__.py
+# Copy files preserving the llama_stack.core.ui package structure
+COPY . /app/llama_stack/core/ui/
+# Set PYTHONPATH so Python can find the llama_stack package
+ENV PYTHONPATH=/app:$PYTHONPATH
+RUN /usr/local/bin/python -m pip install --upgrade pip && \
+    /usr/local/bin/pip3 install -r /app/llama_stack/core/ui/requirements.txt
+WORKDIR /app/llama_stack/core/ui
+EXPOSE 8501
+
+ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

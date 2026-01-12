@@ -1,0 +1,5 @@
+llama-stack==0.3.0
+llama-stack-client==0.3.0
+pandas
+streamlit
+streamlit-option-menu

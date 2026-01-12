@@ -26,8 +26,7 @@ oc apply -f deployment/llama-stack-playground/ui/quay-io-secret.yaml -n llama-st
 oc apply -f deployment/llama-stack-playground/ui/buildConfig.yaml -n llama-stack
 oc start-build llama-stack-playground-build --from-dir=../llama-stack-release-0.2.22/llama_stack/core/ui --follow -n llama-stack
 
-oc apply -f deployment/llama-stack-playground/ui/buildConfig-is.yaml -n llama-stack
-oc start-build llama-stack-playground-build-is --from-dir=../llama-stack-release-0.2.22/llama_stack/core/ui --follow -n llama-stack
+oc apply -f deployment/llama-stack-playground/image/buildConfig-is.yaml -n llama-stack
+oc start-build llama-stack-playground-build-is --from-dir=deployment/llama-stack-playground/ui --follow -n llama-stack
 
-
-kustomize build --enable-helm deployment/llama-stack-playground/overlay/sno | oc apply -f-
+helm upgrade --install llama-stack-playground deployment/llama-stack-playground/chart -n llama-stack
