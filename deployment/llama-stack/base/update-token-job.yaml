@@ -1,48 +1,54 @@
 ---
 apiVersion: batch/v1
-kind: Job
+kind: CronJob
 metadata:
   name: update-stellar-api-token
   namespace: llama-stack
   labels:
     app: token-updater
 spec:
-  ttlSecondsAfterFinished: 300  # Clean up job after 5 minutes
-  template:
+  schedule: "*/20 * * * *"  # Run every 20 minutes
+  successfulJobsHistoryLimit: 3  # Keep 3 successful job history
+  failedJobsHistoryLimit: 1  # Keep 1 failed job history
+  jobTemplate:
     spec:
-      serviceAccountName: default
-      containers:
-      - name: token-updater
-        image: registry.redhat.io/openshift4/ose-cli:latest
-        env:
-        - name: CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: llama-stack-secret
-              key: client-id
-              optional: true
-        - name: CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: llama-stack-secret
-              key: client-secret
-              optional: true
-        - name: SCOPE
-          valueFrom:
-            secretKeyRef:
-              name: llama-stack-secret
-              key: scope
-              optional: true
-        - name: COIN_URL
-          valueFrom:
-            secretKeyRef:
-              name: llama-stack-secret
-              key: coin-url
-              optional: true
-        command:
-          - /bin/bash
-          - -c
-          - |
+      ttlSecondsAfterFinished: 300  # Clean up job after 5 minutes
+      backoffLimit: 3
+      template:
+        spec:
+          serviceAccountName: default
+          containers:
+          - name: token-updater
+            image: registry.redhat.io/openshift4/ose-cli:latest
+            env:
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: vault-api-secret
+                  key: client-id
+                  optional: true
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vault-api-secret
+                  key: client-secret
+                  optional: true
+            - name: SCOPE
+              valueFrom:
+                secretKeyRef:
+                  name: vault-api-secret
+                  key: scope
+                  optional: true
+            - name: COIN_URL
+              valueFrom:
+                secretKeyRef:
+                  name: vault-api-secret
+                  key: vault-url
+                  optional: true
+            command:
+              - /bin/bash
+              - -c
+              - |
             set -e
             
             echo "Starting token generation..."
@@ -101,5 +107,4 @@ spec:
             fi
             
             echo "Token update completed successfully!"
-      restartPolicy: Never
-      backoffLimit: 3
+          restartPolicy: Never
