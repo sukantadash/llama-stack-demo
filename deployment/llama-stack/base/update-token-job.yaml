@@ -1,0 +1,105 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: update-stellar-api-token
+  namespace: llama-stack
+  labels:
+    app: token-updater
+spec:
+  ttlSecondsAfterFinished: 300  # Clean up job after 5 minutes
+  template:
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: token-updater
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        env:
+        - name: CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: client-id
+              optional: true
+        - name: CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: client-secret
+              optional: true
+        - name: SCOPE
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: scope
+              optional: true
+        - name: COIN_URL
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: coin-url
+              optional: true
+        command:
+          - /bin/bash
+          - -c
+          - |
+            set -e
+            
+            echo "Starting token generation..."
+            
+            # Validate required environment variables
+            if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ] || [ -z "$SCOPE" ] || [ -z "$COIN_URL" ]; then
+              echo "Error: Missing required environment variables"
+              echo "Required: CLIENT_ID, CLIENT_SECRET, SCOPE, COIN_URL"
+              exit 1
+            fi
+            
+            # Make the curl request to get access token
+            echo "Requesting access token from $COIN_URL..."
+            RESPONSE=$(curl -k -s -d "client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=client_credentials&scope=${SCOPE}" "${COIN_URL}")
+            
+            # Check if curl was successful
+            if [ $? -ne 0 ]; then
+              echo "Error: Failed to make request to token endpoint"
+              exit 1
+            fi
+            
+            # Extract access_token from JSON response using jq or grep/sed
+            if command -v jq &> /dev/null; then
+              ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+            else
+              # Fallback to grep/sed if jq is not available
+              ACCESS_TOKEN=$(echo "$RESPONSE" | grep -o '"access_token":"[^"]*' | sed 's/"access_token":"//')
+            fi
+            
+            # Validate that we got a token
+            if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" = "null" ]; then
+              echo "Error: Failed to extract access_token from response"
+              echo "Response: $RESPONSE"
+              exit 1
+            fi
+            
+            echo "Successfully retrieved access token (length: ${#ACCESS_TOKEN})"
+            
+            # Base64 encode the access token
+            ENCODED_TOKEN=$(echo -n "$ACCESS_TOKEN" | base64 | tr -d '\n')
+            
+            # Check if secret exists, create if it doesn't
+            if ! oc get secret llama-stack-api -n llama-stack &>/dev/null; then
+              echo "Secret llama-stack-api does not exist, creating it..."
+              oc create secret generic llama-stack-api \
+                --from-literal=stellarapikey="$ACCESS_TOKEN" \
+                -n llama-stack
+              echo "Secret llama-stack-api created successfully"
+            else
+              echo "Updating existing secret llama-stack-api..."
+              # Update the secret using oc patch with base64 encoded value
+              oc patch secret llama-stack-api -n llama-stack \
+                --type='json' \
+                -p="[{\"op\": \"replace\", \"path\": \"/data/stellarapikey\", \"value\": \"${ENCODED_TOKEN}\"}]"
+              echo "Secret llama-stack-api updated successfully"
+            fi
+            
+            echo "Token update completed successfully!"
+      restartPolicy: Never
+      backoffLimit: 3

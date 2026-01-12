@@ -4,4 +4,6 @@ resources:
   - configmap.yaml
   - llama-stack.yaml
   - llama-stack-secret.yaml
+  - vault-api-secret.yaml
   - route.yaml
+  - update-token-job.yaml
