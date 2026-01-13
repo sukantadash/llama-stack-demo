@@ -128,24 +128,14 @@ spec:
                 
                 echo "Successfully retrieved access token (length: ${#ACCESS_TOKEN})"
                 
-                # Base64 encode the access token
-                ENCODED_TOKEN=$(echo -n "$ACCESS_TOKEN" | base64 | tr -d '\n')
-                
-                # Check if secret exists, create if it doesn't
-                if ! oc get secret llama-stack-api -n llama-stack &>/dev/null; then
-                  echo "Secret llama-stack-api does not exist, creating it..."
-                  oc create secret generic llama-stack-api \
-                    --from-literal=stellarapikey="$ACCESS_TOKEN" \
-                    -n llama-stack
-                  echo "Secret llama-stack-api created successfully"
-                else
-                  echo "Updating existing secret llama-stack-api..."
-                  # Update the secret using oc patch with base64 encoded value
-                  oc patch secret llama-stack-api -n llama-stack \
-                    --type='json' \
-                    -p="[{\"op\": \"replace\", \"path\": \"/data/stellarapikey\", \"value\": \"${ENCODED_TOKEN}\"}]"
-                  echo "Secret llama-stack-api updated successfully"
-                fi
+                # Update or create the secret using oc create with --dry-run and oc apply
+                # This approach handles both create and update seamlessly
+                echo "Updating secret llama-stack-api..."
+                oc create secret generic llama-stack-api \
+                  --from-literal=stellarapikey="$ACCESS_TOKEN" \
+                  -n llama-stack \
+                  --dry-run=client -o yaml | oc apply -f -
+                echo "Secret llama-stack-api updated successfully"
                 
                 echo "Token update completed successfully!"
                 
