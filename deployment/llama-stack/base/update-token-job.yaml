@@ -19,6 +19,9 @@ rules:
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get", "list", "create", "update", "patch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -145,4 +148,47 @@ spec:
                 fi
                 
                 echo "Token update completed successfully!"
+                
+                # Restart llama-stack pod to pick up new token
+                # This causes a brief downtime (~10-30 seconds) but ensures
+                # the new token is picked up immediately
+                echo ""
+                echo "Finding llama-stack pod to restart..."
+                
+                # Try multiple selectors to find the llama-stack pod
+                POD_NAME=""
+                
+                # Try by label selector (common patterns)
+                POD_NAME=$(oc get pods -n llama-stack -l app=llama-stack -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+                
+                # If not found, try by name pattern
+                if [ -z "$POD_NAME" ]; then
+                  POD_NAME=$(oc get pods -n llama-stack -o jsonpath='{.items[?(@.metadata.name=~"llama.*")].metadata.name}' 2>/dev/null | awk '{print $1}' || echo "")
+                fi
+                
+                # If still not found, try llamastack (no hyphen)
+                if [ -z "$POD_NAME" ]; then
+                  POD_NAME=$(oc get pods -n llama-stack -o jsonpath='{.items[?(@.metadata.name=~"llamastack.*")].metadata.name}' 2>/dev/null | awk '{print $1}' || echo "")
+                fi
+                
+                # If still not found, list all pods and try to find it
+                if [ -z "$POD_NAME" ]; then
+                  POD_NAME=$(oc get pods -n llama-stack -o name 2>/dev/null | grep -i llama | head -1 | sed 's|pod/||' || echo "")
+                fi
+                
+                if [ -n "$POD_NAME" ]; then
+                  echo "Found llama-stack pod: $POD_NAME"
+                  echo "Restarting pod to pick up new token..."
+                  oc delete pod "$POD_NAME" -n llama-stack --grace-period=30 --ignore-not-found=true
+                  echo "Pod restart initiated. New pod will start with updated token."
+                  
+                  # Wait a moment and verify pod is restarting
+                  sleep 2
+                  echo "Checking pod status..."
+                  oc get pod "$POD_NAME" -n llama-stack 2>/dev/null || echo "Pod deleted, new pod will be created by the operator/deployment"
+                else
+                  echo "Warning: No llama-stack pod found to restart"
+                  echo "Available pods in namespace:"
+                  oc get pods -n llama-stack -o name 2>/dev/null || echo "Could not list pods"
+                fi
           restartPolicy: Never
