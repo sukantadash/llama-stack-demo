@@ -11,8 +11,34 @@ import json
 import re
 import os
 import asyncio
+import logging
+from pathlib import Path
 from typing import Dict, Any, Optional
 from rich.console import Console
+
+# Configure logging with absolute path
+_log_file_path = Path(__file__).parent / 'llama_stack_api.log'
+logger = logging.getLogger(__name__)
+
+# Only configure if not already configured (avoid duplicate handlers)
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    # File handler
+    file_handler = logging.FileHandler(_log_file_path)
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    
+    # Console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    
+    logger.info(f"=== Logging initialized ===")
+    logger.info(f"Log file: {_log_file_path}")
 
 # LangChain 1.0 imports
 from langchain.agents import create_agent
@@ -160,7 +186,8 @@ def _get_mcp_server_url(tool_group: str, config: Dict[str, Any]) -> Optional[str
 
 
 async def _run_agent_async(system_prompt: str, user_prompt: str, tool_group: str, 
-                           config: Dict[str, Any]) -> Dict[str, Any]:
+                           config: Dict[str, Any], node_name: str = None,
+                           system_prompt_id: str = None, user_prompt_id: str = None) -> Dict[str, Any]:
     """
     Async implementation of run_agent using LangChain 1.0 create_agent
     
@@ -250,10 +277,28 @@ async def _run_agent_async(system_prompt: str, user_prompt: str, tool_group: str
             system_prompt=system_prompt,
         )
         
+        # Log API request details
+        logger.info(f"=== Llama-Stack API Request ===")
+        if node_name:
+            logger.info(f"Node Name: {node_name}")
+        if system_prompt_id:
+            logger.info(f"System Prompt ID: {system_prompt_id}")
+        if user_prompt_id:
+            logger.info(f"User Prompt ID: {user_prompt_id}")
+        logger.info(f"API Endpoint: {openai_endpoint}")
+        logger.info(f"Model: {config.get('model', 'N/A')}")
+        logger.info(f"Tool Group: {tool_group}")
+        logger.info(f"Raw Query (System Prompt):\n{system_prompt}")
+        logger.info(f"Raw Query (User Prompt):\n{user_prompt}")
+        
         # Invoke agent
         result = await agent.ainvoke({
             "messages": [{"role": "user", "content": user_prompt}]
         })
+        
+        # Log raw API response
+        logger.info(f"=== Llama-Stack API Response ===")
+        logger.info(f"Raw API Response (Messages):\n{json.dumps([{'type': type(msg).__name__, 'content': str(msg.content) if hasattr(msg, 'content') else str(msg)} for msg in result.get('messages', [])], indent=2, default=str)}")
         
         # Extract final response from messages
         final_response = ""
@@ -375,6 +420,11 @@ async def _run_agent_async(system_prompt: str, user_prompt: str, tool_group: str
         # Add metadata about tool execution
         tool_executed = len(tool_messages) > 0
         
+        # Log final processed response
+        logger.info(f"Final Answer:\n{final_response}")
+        logger.info(f"Tool Executed: {tool_executed}, Tool Message Count: {len(tool_messages)}")
+        logger.info(f"=== Llama-Stack API Response End ===")
+        
         return {
             "success": True,
             "final_answer": final_response,
@@ -422,7 +472,9 @@ async def _run_agent_async(system_prompt: str, user_prompt: str, tool_group: str
 
 
 def run_agent(system_prompt: str, user_prompt: str, tool_group: str, 
-              config: Dict[str, Any], max_infer_iters: int = 20) -> Dict[str, Any]:
+              config: Dict[str, Any], max_infer_iters: int = 20,
+              node_name: str = None, system_prompt_id: str = None, 
+              user_prompt_id: str = None) -> Dict[str, Any]:
     """
     Run a LangChain 1.0 agent with OpenAI-compatible LLM and MCP tools
     
@@ -440,6 +492,9 @@ def run_agent(system_prompt: str, user_prompt: str, tool_group: str,
             - max_tokens: Max tokens (default: 4096)
             - mcp_servers: Dict mapping server names to URLs (optional)
         max_infer_iters (int): Maximum inference iterations (not used in LangChain 1.0, kept for compatibility)
+        node_name (str, optional): Node name for logging purposes
+        system_prompt_id (str, optional): System prompt ID for logging purposes
+        user_prompt_id (str, optional): User prompt ID for logging purposes
     
     Returns:
         dict: Response with success status, final answer, and raw response
@@ -457,8 +512,10 @@ def run_agent(system_prompt: str, user_prompt: str, tool_group: str,
             )
         else:
             return loop.run_until_complete(
-                _run_agent_async(system_prompt, user_prompt, tool_group, config)
+                _run_agent_async(system_prompt, user_prompt, tool_group, config,
+                               node_name, system_prompt_id, user_prompt_id)
             )
     except RuntimeError:
         # No event loop running, create a new one
-        return asyncio.run(_run_agent_async(system_prompt, user_prompt, tool_group, config))
+        return asyncio.run(_run_agent_async(system_prompt, user_prompt, tool_group, config,
+                                           node_name, system_prompt_id, user_prompt_id))

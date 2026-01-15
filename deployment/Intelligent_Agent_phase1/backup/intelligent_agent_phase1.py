@@ -134,59 +134,59 @@ def identify_errors_node(state: WorkflowState) -> WorkflowState:
     
     system_prompt = f"""You are an expert OpenShift/Kubernetes administrator. Your task is to analyze the namespace '{namespace}' for errors.
 
-❗ ABSOLUTE REQUIREMENTS:
-1. YOU MUST USE THE TOOLS PROVIDED - The system will automatically execute them when you call them
-2. DO NOT write function calls as text - the tools are already available, just use them
-3. DO NOT describe what you would do - actually do it by using the tools
-4. After getting tool results, analyze them and return your findings as JSON
+    ❗ ABSOLUTE REQUIREMENTS:
+    1. YOU MUST USE THE TOOLS PROVIDED - The system will automatically execute them when you call them
+    2. DO NOT write function calls as text - the tools are already available, just use them
+    3. DO NOT describe what you would do - actually do it by using the tools
+    4. After getting tool results, analyze them and return your findings as JSON
 
-🔧 HOW TO USE TOOLS:
-- The tools are already connected and ready to use
-- Simply indicate which tool you need and provide the parameters
-- The system will execute the tool and give you the results
-- Then analyze those results and return JSON
+    🔧 HOW TO USE TOOLS:
+    - The tools are already connected and ready to use
+    - Simply indicate which tool you need and provide the parameters
+    - The system will execute the tool and give you the results
+    - Then analyze those results and return JSON
 
-⚠️ CRITICAL: Your final answer must be JSON only. Do not include any tool call syntax, function names, or descriptions."""
+    ⚠️ CRITICAL: Your final answer must be JSON only. Do not include any tool call syntax, function names, or descriptions."""
     
     user_prompt = f"""Analyze all pods in namespace '{namespace}' for errors.
 
-STEPS:
-1. First, call pods_list_in_namespace with namespace='{namespace}' to get the actual list of pods
-2. For each pod you find, check its status
-3. For pods with errors (CrashLoopBackOff, Error, OOMKilled, etc.), call pods_get to get details
-4. For pods with errors, call pods_log to get error logs
-5. Call events_list to check for error events in the namespace
-6. After gathering all data, analyze and return your findings
+    STEPS:
+    1. First, call pods_list_in_namespace with namespace='{namespace}' to get the actual list of pods
+    2. For each pod you find, check its status
+    3. For pods with errors (CrashLoopBackOff, Error, OOMKilled, etc.), call pods_get to get details
+    4. For pods with errors, call pods_log to get error logs
+    5. Call events_list to check for error events in the namespace
+    6. After gathering all data, analyze and return your findings
 
-IMPORTANT: 
-- Use the ACTUAL pod names from the pods_list_in_namespace results, not examples
-- Return ONLY valid JSON - no markdown, no code blocks, no explanatory text
-- Start your response with {{ and end with }}
+    IMPORTANT: 
+    - Use the ACTUAL pod names from the pods_list_in_namespace results, not examples
+    - Return ONLY valid JSON - no markdown, no code blocks, no explanatory text
+    - Start your response with {{ and end with }}
 
-JSON FORMAT:
-{{
-    "namespace": "{namespace}",
-    "errors_found": true or false,
-    "error_count": number of errors found,
-    "errors": [
-        {{
-            "pod_name": "actual pod name from the list",
-            "error_type": "concise error description",
-            "error_timestamp": "timestamp from events or pod status",
-            "error_description": "detailed error description from logs or events",
-            "pod_status": "actual pod status",
-            "relevant_logs": "excerpt from logs showing the error"
-        }}
-    ]
-}}
+    JSON FORMAT:
+    {{
+        "namespace": "{namespace}",
+        "errors_found": true or false,
+        "error_count": number of errors found,
+        "errors": [
+            {{
+                "pod_name": "actual pod name from the list",
+                "error_type": "concise error description",
+                "error_timestamp": "timestamp from events or pod status",
+                "error_description": "detailed error description from logs or events",
+                "pod_status": "actual pod status",
+                "relevant_logs": "excerpt from logs showing the error"
+            }}
+        ]
+    }}
 
-If no errors are found, return:
-{{
-    "namespace": "{namespace}",
-    "errors_found": false,
-    "error_count": 0,
-    "errors": []
-}}"""
+    If no errors are found, return:
+    {{
+        "namespace": "{namespace}",
+        "errors_found": false,
+        "error_count": 0,
+        "errors": []
+    }}"""
     
     result = run_agent(
         system_prompt=system_prompt,
@@ -320,35 +320,35 @@ def search_confluence_node(state: WorkflowState) -> WorkflowState:
     
     system_prompt = f"""You are an expert Confluence administrator. Your task is to search for pages and extract resolution information.
 
-❗ ABSOLUTE REQUIREMENTS:
-1. YOU MUST USE THE TOOLS PROVIDED - The system will automatically execute them when you call them
-2. DO NOT write function calls as text - the tools are already available, just use them
-3. DO NOT describe what you would do - actually do it by using the tools
-4. After getting tool results, analyze them and return your findings as JSON
+    ❗ ABSOLUTE REQUIREMENTS:
+    1. YOU MUST USE THE TOOLS PROVIDED - The system will automatically execute them when you call them
+    2. DO NOT write function calls as text - the tools are already available, just use them
+    3. DO NOT describe what you would do - actually do it by using the tools
+    4. After getting tool results, analyze them and return your findings as JSON
 
-🔧 HOW TO USE TOOLS:
-- The tools are already connected and ready to use
-- Call confluence_search with query and space_key parameters
-- Call confluence_get_page to retrieve full page content
-- The system will execute the tools and give you the results
-- Then analyze those results and return JSON
+    🔧 HOW TO USE TOOLS:
+    - The tools are already connected and ready to use
+    - Call confluence_search with query and space_key parameters
+    - Call confluence_get_page to retrieve full page content
+    - The system will execute the tools and give you the results
+    - Then analyze those results and return JSON
 
-⚠️ CRITICAL: Your final answer must be JSON only. Do not include any tool call syntax, function names, or descriptions."""
+    ⚠️ CRITICAL: Your final answer must be JSON only. Do not include any tool call syntax, function names, or descriptions."""
     
     user_prompt = f"""Search the Confluence space '{space_key}' for a page with title containing '{error_type}' and get the page content.
-Return the resolution provided in the page without any modifications.
+    Return the resolution provided in the page without any modifications.
 
-IMPORTANT: Return ONLY the JSON object below. Do NOT include any markdown, code blocks, or explanatory text. Start your response with {{ and end with }}.
+    IMPORTANT: Return ONLY the JSON object below. Do NOT include any markdown, code blocks, or explanatory text. Start your response with {{ and end with }}.
 
-{{
-    "search_query": "{error_type}",
-    "space_key": "{space_key}",
-    "page_found": false,
-    "page_title": "",
-    "page_url": "",
-    "resolution": "",
-    "resolution_sections": []
-}}"""
+    {{
+        "search_query": "{error_type}",
+        "space_key": "{space_key}",
+        "page_found": false,
+        "page_title": "",
+        "page_url": "",
+        "resolution": "",
+        "resolution_sections": []
+    }}"""
     
     result = run_agent(
         system_prompt=system_prompt,
@@ -447,20 +447,20 @@ def generate_ai_resolution_node(state: WorkflowState) -> WorkflowState:
     
     system_prompt = "You are a Kubernetes expert. Generate a simple resolution for the error. Return ONLY valid JSON, no other text."
     user_prompt = f"""Error: {error_type} in pod {pod_name} (namespace: {namespace})
-Description: {error_description}
+    Description: {error_description}
 
-Generate a resolution with:
-1. Root cause
-2. Fix steps  
-3. Verification
+    Generate a resolution with:
+    1. Root cause
+    2. Fix steps  
+    3. Verification
 
-Return ONLY this JSON format (no markdown, no code blocks, no other text):
-{{
-    "resolution_title": "Fix for {error_type}",
-    "root_cause": "brief root cause",
-    "fix_steps": ["step1", "step2", "step3"],
-    "verification": "how to verify fix"
-}}"""
+    Return ONLY this JSON format (no markdown, no code blocks, no other text):
+    {{
+        "resolution_title": "Fix for {error_type}",
+        "root_cause": "brief root cause",
+        "fix_steps": ["step1", "step2", "step3"],
+        "verification": "how to verify fix"
+    }}"""
     
     result = run_agent(
         system_prompt=system_prompt,
@@ -544,53 +544,53 @@ def save_to_confluence_node(state: WorkflowState) -> WorkflowState:
     # Format page content
     page_content = f"""h1. {resolution_title}
 
-h2. Root Cause
-{root_cause}
+    h2. Root Cause
+    {root_cause}
 
-h2. Resolution Steps
-{chr(10).join([f"# {step}" for step in fix_steps])}
+    h2. Resolution Steps
+    {chr(10).join([f"# {step}" for step in fix_steps])}
 
-h2. Verification
-{verification}
+    h2. Verification
+    {verification}
 
-*Generated by AI on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"""
+    *Generated by AI on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"""
     
     system_prompt = f"""You are a Confluence expert. Your task is to create a page in Confluence.
 
-❗ CRITICAL - YOU MUST ACTUALLY CALL THE TOOL:
-1. The tool name is: confluence_create_page
-2. YOU MUST CALL THIS TOOL - do not describe it, do not return it as JSON, actually CALL it
-3. When you call the tool, the system will execute it and return a result
-4. After the tool executes and returns a result, format that result as JSON
+    ❗ CRITICAL - YOU MUST ACTUALLY CALL THE TOOL:
+    1. The tool name is: confluence_create_page
+    2. YOU MUST CALL THIS TOOL - do not describe it, do not return it as JSON, actually CALL it
+    3. When you call the tool, the system will execute it and return a result
+    4. After the tool executes and returns a result, format that result as JSON
 
-🔧 TOOL EXECUTION PROCESS:
-Step 1: Call the tool confluence_create_page with the required parameters
-Step 2: Wait for the tool to execute and return a result
-Step 3: Take the tool's result and format it as JSON
+    🔧 TOOL EXECUTION PROCESS:
+    Step 1: Call the tool confluence_create_page with the required parameters
+    Step 2: Wait for the tool to execute and return a result
+    Step 3: Take the tool's result and format it as JSON
 
-⚠️ DO NOT:
-- Return tool call information as JSON
-- Describe what you would do
-- Write function signatures
-- Return {{"confluence_create_page": {{...}}}} - this is WRONG
+    ⚠️ DO NOT:
+    - Return tool call information as JSON
+    - Describe what you would do
+    - Write function signatures
+    - Return {{"confluence_create_page": {{...}}}} - this is WRONG
 
-✅ DO:
-- Actually call the tool confluence_create_page
-- Wait for the execution result
-- Return the execution result formatted as JSON"""
-    
-    user_prompt = f"""Create a Confluence page with these details:
-- Space key: {space_key}
-- Title: {resolution_title}
-- Body content: {page_content}
+    ✅ DO:
+    - Actually call the tool confluence_create_page
+    - Wait for the execution result
+    - Return the execution result formatted as JSON"""
+        
+        user_prompt = f"""Create a Confluence page with these details:
+    - Space key: {space_key}
+    - Title: {resolution_title}
+    - Body content: {page_content}
 
-IMPORTANT: Return ONLY the JSON object below. Do NOT include any markdown, code blocks, or explanatory text. Start your response with {{ and end with }}.
+    IMPORTANT: Return ONLY the JSON object below. Do NOT include any markdown, code blocks, or explanatory text. Start your response with {{ and end with }}.
 
-{{
-    "page_created": true,
-    "page_title": "{resolution_title}",
-    "page_url": "url from tool result"
-}}"""
+    {{
+        "page_created": true,
+        "page_title": "{resolution_title}",
+        "page_url": "url from tool result"
+    }}"""
     
     result = run_agent(
         system_prompt=system_prompt,
@@ -700,50 +700,50 @@ def create_jira_ticket_node(state: WorkflowState) -> WorkflowState:
     ai_note = "⚠️ AI-Generated Resolution - Review before applying" if is_ai_generated else ""
     
     incident_description = f"""Pod: {pod_name}
-Namespace: {namespace}
-Error: {error_description}
+    Namespace: {namespace}
+    Error: {error_description}
 
-Resolution Source: {page_title}
-{resolution}
+    Resolution Source: {page_title}
+    {resolution}
 
-{ai_note}"""
+    {ai_note}"""
     
     system_prompt = f"""You are a Jira expert. Your task is to create an issue in Jira.
 
-❗ CRITICAL - YOU MUST ACTUALLY CALL THE TOOL:
-1. The tool name is: jira_create_issue (NOT create_issue - must be jira_create_issue)
-2. YOU MUST CALL THIS TOOL - do not describe it, do not return it as JSON, actually CALL it
-3. When you call the tool, the system will execute it and return a result
-4. After the tool executes and returns a result, format that result as JSON
+    ❗ CRITICAL - YOU MUST ACTUALLY CALL THE TOOL:
+    1. The tool name is: jira_create_issue (NOT create_issue - must be jira_create_issue)
+    2. YOU MUST CALL THIS TOOL - do not describe it, do not return it as JSON, actually CALL it
+    3. When you call the tool, the system will execute it and return a result
+    4. After the tool executes and returns a result, format that result as JSON
 
-🔧 TOOL EXECUTION PROCESS:
-Step 1: Call the tool jira_create_issue (full name, not shortened) with the required parameters
-Step 2: Wait for the tool to execute and return a result
-Step 3: Take the tool's result and format it as JSON
+    🔧 TOOL EXECUTION PROCESS:
+    Step 1: Call the tool jira_create_issue (full name, not shortened) with the required parameters
+    Step 2: Wait for the tool to execute and return a result
+    Step 3: Take the tool's result and format it as JSON
 
-⚠️ DO NOT:
-- Use shortened names like create_issue - must use jira_create_issue
-- Return tool call information as JSON
-- Describe what you would do
-- Write function signatures
+    ⚠️ DO NOT:
+    - Use shortened names like create_issue - must use jira_create_issue
+    - Return tool call information as JSON
+    - Describe what you would do
+    - Write function signatures
 
-✅ DO:
-- Actually call the tool jira_create_issue (full name)
-- Wait for the execution result
-- Return the execution result formatted as JSON"""
-    
-    user_prompt = f"""Create a Jira issue with these details:
-- Project key: {project_key}
-- Issue type: {issue_type}
-- Summary: {incident_title}
-- Description: {incident_description}
+    ✅ DO:
+    - Actually call the tool jira_create_issue (full name)
+    - Wait for the execution result
+    - Return the execution result formatted as JSON"""
+        
+        user_prompt = f"""Create a Jira issue with these details:
+    - Project key: {project_key}
+    - Issue type: {issue_type}
+    - Summary: {incident_title}
+    - Description: {incident_description}
 
-IMPORTANT: Return ONLY the JSON object below. Do NOT include any markdown, code blocks, or explanatory text. Start your response with {{ and end with }}.
+    IMPORTANT: Return ONLY the JSON object below. Do NOT include any markdown, code blocks, or explanatory text. Start your response with {{ and end with }}.
 
-{{
-    "ticket_created": true,
-    "ticket_key": "issue key from tool result"
-}}"""
+    {{
+        "ticket_created": true,
+        "ticket_key": "issue key from tool result"
+    }}"""
     
     result = run_agent(
         system_prompt=system_prompt,
