@@ -48,6 +48,36 @@ spec:
           value: 'http://localhost'
         - name: LLAMA_STACK_CONFIG_DIR
           value: /opt/app-root/src/.llama/distributions/rh/
+        - name: PGVECTOR_HOST
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: pgvector-host
+        - name: PGVECTOR_PORT
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: pgvector-port
+        - name: PGVECTOR_DB
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: pgvector-db
+        - name: PGVECTOR_REGISTRY_DB
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: pgvector-registry-db
+        - name: PGVECTOR_USER
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: pgvector-user
+        - name: PGVECTOR_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: llama-stack-secret
+              key: pgvector-password
       name: llama-stack
       port: 8321
       resources:
@@ -62,3 +92,12 @@ spec:
 #      name: rh-dev
     userConfig:
       configMapName: llama-stack-config
+    # Option 1: Of keeping track of the vector_stores and other data.
+    # podOverrides:
+    #   volumes:
+    #     - name: llama-stack-config-volume
+    #       persistentVolumeClaim:
+    #         claimName: llama-stack-pvc
+    #   volumeMounts:
+    #     - name: llama-stack-config-volume
+    #       mountPath: ~/.llama

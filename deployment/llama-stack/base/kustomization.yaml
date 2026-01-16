@@ -1,9 +1,18 @@
----
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+generatorOptions:
+  disableNameSuffixHash: true
+
 resources:
   - namespace.yaml
-  - configmap.yaml
   - llama-stack.yaml
   - llama-stack-secret.yaml
   - vault-api-secret.yaml
   - route.yaml
   - update-token-job.yaml
+
+configMapGenerator:
+  - name: llama-stack-config
+    files:
+      - run.yaml
