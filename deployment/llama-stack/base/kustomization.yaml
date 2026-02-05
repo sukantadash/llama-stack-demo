@@ -11,7 +11,7 @@ resources:
   - vault-api-secret.yaml
   - route.yaml
   - update-token-job.yaml
-
+  - pgvector-secret.yaml
 configMapGenerator:
   - name: llama-stack-config
     files:

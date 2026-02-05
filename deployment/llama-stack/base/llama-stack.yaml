@@ -7,7 +7,7 @@ metadata:
       {"apiVersion":"llamastack.io/v1alpha1","kind":"LlamaStackDistribution","metadata":{"annotations":{},"name":"llamastack-with-config","namespace":"default"},"spec":{"replicas":1,"server":{"containerSpec":{"port":8321},"distribution":{"name":"remote-vllm"},"userConfig":{"configMapName":"llama-stack-config"}}}}
   name: llamastack-with-config
 spec:
-  replicas: 2
+  replicas: 1
   server:
     containerSpec:
       command:
@@ -51,33 +51,36 @@ spec:
         - name: PGVECTOR_HOST
           valueFrom:
             secretKeyRef:
-              name: llama-stack-secret
+              name: pgvector-secret
               key: pgvector-host
         - name: PGVECTOR_PORT
           valueFrom:
             secretKeyRef:
-              name: llama-stack-secret
+              name: pgvector-secret
               key: pgvector-port
         - name: PGVECTOR_DB
           valueFrom:
             secretKeyRef:
-              name: llama-stack-secret
+              name: pgvector-secret
               key: pgvector-db
-        - name: PGVECTOR_REGISTRY_DB
-          valueFrom:
-            secretKeyRef:
-              name: llama-stack-secret
-              key: pgvector-registry-db
         - name: PGVECTOR_USER
           valueFrom:
             secretKeyRef:
-              name: llama-stack-secret
+              name: pgvector-secret
               key: pgvector-user
         - name: PGVECTOR_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: llama-stack-secret
+              name: pgvector-secret
               key: pgvector-password
+        - name: SENTENCE_TRANSFORMERS_HOME
+          value: /opt/app-root/src/.cache/huggingface/hub
+        - name: HF_HUB_OFFLINE
+          value: "1"
+        - name: TRANSFORMERS_OFFLINE
+          value: "1"
+        - name: HF_DATASETS_OFFLINE
+          value: "1"
       name: llama-stack
       port: 8321
       resources:
@@ -88,16 +91,6 @@ spec:
           cpu: 250m
           memory: 500Mi
     distribution:
-      image: quay.io/opendatahub/llama-stack:rhoai-v3.0-latest
-#      name: rh-dev
+      image: registry.redhat.io/rhoai/odh-llama-stack-core-rhel9@sha256:13ec5c9b96a9ca8c0a1fcc0568cf6f893478742d28d3b1381f073b9bdafb3320
     userConfig:
       configMapName: llama-stack-config
-    # Option 1: Of keeping track of the vector_stores and other data.
-    # podOverrides:
-    #   volumes:
-    #     - name: llama-stack-config-volume
-    #       persistentVolumeClaim:
-    #         claimName: llama-stack-pvc
-    #   volumeMounts:
-    #     - name: llama-stack-config-volume
-    #       mountPath: ~/.llama
