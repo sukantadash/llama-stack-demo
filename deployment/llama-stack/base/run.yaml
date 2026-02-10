@@ -15,13 +15,6 @@ apis:
   - vector_io
 providers:
   inference:
-    - provider_id: llama-3b
-      provider_type: remote::vllm
-      config:
-        url: ${env.LLAMA3B_URL}
-        max_tokens: 4096
-        api_token: ${env.LLAMA_TOKEN}
-        tls_verify: false
     - provider_id: llama-17b
       provider_type: remote::vllm
       config:
@@ -29,13 +22,6 @@ providers:
         max_tokens: 4096
         api_token: ${env.LLAMA17B_TOKEN}
         tls_verify: false
-    - provider_id: deepseek
-      provider_type: remote::vllm
-      config:
-        url: ${env.DEEPSEEK_URL}
-        max_tokens: 4096
-        api_token: ${env.DEEPSEEK_TOKEN}
-        tls_verify: false          
     - provider_id: sentence-transformers
       provider_type: inline::sentence-transformers
       config: {}
@@ -163,3 +149,7 @@ tool_groups:
     provider_id: model-context-protocol
     mcp_endpoint:
       uri: "http://atlassian-mcp-server:8080/sse"
+  - toolgroup_id: mcp::snow
+    provider_id: model-context-protocol
+    mcp_endpoint:
+      uri: "http://mcp-self-service-agent-snow.it-self-service-agent.svc.cluster.local:8000/mcp"
