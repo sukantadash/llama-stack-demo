@@ -140,7 +140,7 @@ tool_groups:
   - toolgroup_id: mcp::openshift
     provider_id: model-context-protocol
     mcp_endpoint:
-      uri: "http://ocp-mcp-server:8000/sse"
+      uri: "http://ocp-mcp-server.llama-stack.svc.cluster.local:8000/mcp"
   - toolgroup_id: mcp::slack
     provider_id: model-context-protocol
     mcp_endpoint:
