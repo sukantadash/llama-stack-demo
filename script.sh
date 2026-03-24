@@ -11,6 +11,8 @@ oc apply -k deployment/Serverless/instance
 
 oc apply -k deployment/openshift-ai/instance
 
+oc new-project llama-stack
+
 helm install pgvector deployment/pgvector -n llama-stack
 
 oc apply -k deployment/llama-stack/overlay 
@@ -22,15 +24,34 @@ oc apply -k deployment/mcp-openshift/overlay
 
 oc apply -k deployment/mcp-atlassian/overlay 
 
+#repository setup for building the image
 oc apply -f deployment/llama-stack-playground/ui/quay-io-secret.yaml -n llama-stack
 
 oc apply -f deployment/llama-stack-playground/ui/buildConfig.yaml -n llama-stack
 oc start-build llama-stack-playground-build --from-dir=../llama-stack-release-0.2.22/llama_stack/core/ui --follow -n llama-stack
 
+#building the image from imagestream
+oc apply -f deployment/llama-stack-playground/image/imagestream.yaml -n llama-stack
 oc apply -f deployment/llama-stack-playground/image/buildConfig-is.yaml -n llama-stack
+
+
 oc start-build llama-stack-playground-build-is --from-dir=deployment/llama-stack-playground/ui --follow -n llama-stack
 
+
 helm upgrade --install llama-stack-playground deployment/llama-stack-playground/chart -n llama-stack
+
+
+curl -X 'POST' \
+    'https://llama-4-scout-17b-16e-w4a16-maas-apicast-production.apps.prod.rhoai.rh-aiservices-bu.com:443/v1/completions' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -H 'Authorization: Bearer ' \
+    -d '{
+    "model": "llama-4-scout-17b-16e-w4a16",
+    "prompt": "San Francisco is a",
+    "max_tokens": 15,
+    "temperature": 0
+}'
 
 
 #######
@@ -70,3 +91,6 @@ BEGIN
     END LOOP;
 END $$;
 ######
+
+
+oc apply -f gitops/app-of-apps.yaml

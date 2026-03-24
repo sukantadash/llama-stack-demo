@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: llama-stack-demo
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/REPLACE_ORG/REPLACE_REPO.git
+    targetRevision: main
+    path: llama-stack-demo-working/gitops/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

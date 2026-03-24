@@ -55,6 +55,12 @@ spec:
             secretKeyRef:
               name: pgvector-secret
               key: pgvector-password
+        - name: OTEL_SERVICE_NAME
+          value: llamastack
+        - name: TELEMETRY_SINKS
+          value: 'console,otel_trace,otel_metric'
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://otel-collector-collector.observability-hub.svc.cluster.local:4318
         - name: SENTENCE_TRANSFORMERS_HOME
           value: /opt/app-root/src/.cache/huggingface/hub
         - name: HF_HUB_OFFLINE

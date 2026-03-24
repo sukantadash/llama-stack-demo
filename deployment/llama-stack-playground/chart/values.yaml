@@ -4,7 +4,7 @@ replicaCount: 1
 image:
   repository: image-registry.openshift-image-registry.svc:5000/llama-stack/llama-stack-playground  # Built for amd64
 #  tag: "release-0.2.22"
-  tag: "release-0.3.0"
+  tag: "release-0.3.0-v1"
   pullPolicy: Always
 
 imagePullSecrets: []

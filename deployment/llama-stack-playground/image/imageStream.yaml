@@ -1,0 +1,15 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: llama-stack-playground
+  namespace: llama-stack
+  labels:
+    app: llama-stack-playground
+    component: build
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+    - name: release-0.3.0-v1
+      referencePolicy:
+        type: Local
