@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pgvector
+  labels:
+    app.kubernetes.io/name: pgvector
+    app.kubernetes.io/instance: pgvector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pgvector
+      app.kubernetes.io/instance: pgvector
+  serviceName: pgvector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pgvector
+        app.kubernetes.io/instance: pgvector
+    spec:
+      serviceAccountName: pgvector
+      containers:
+        - name: pgvector
+          image: ankane/pgvector:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_USER
+              value: "pguser"
+            - name: POSTGRES_DB
+              value: "pgvector"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgvector
+                  key: password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: pgdata
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 8Gi

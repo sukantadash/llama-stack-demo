@@ -1,26 +1,52 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
   name: llama-stack-demo
   namespace: openshift-gitops
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
-  source:
-    repoURL: https://github.com/REPLACE_ORG/REPLACE_REPO.git
-    targetRevision: main
-    path: llama-stack-demo-working/gitops/applications
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: openshift-gitops
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - name: openshift-ai-operator
+            path: llama-stack-demo-working/deployment/openshift-ai/operator/overlays
+            namespace: ""
+            syncOptions: '["CreateNamespace=true","ServerSideApply=true"]'
+          - name: openshift-ai-instance
+            path: llama-stack-demo-working/deployment/openshift-ai/instance
+            namespace: ""
+            syncOptions: '["ServerSideApply=true"]'
+          - name: pgvector
+            path: llama-stack-demo-working/deployment/pgvector/base
+            namespace: llama-stack
+            syncOptions: '["CreateNamespace=true"]'
+          - name: llama-stack
+            path: llama-stack-demo-working/deployment/llama-stack/overlay
+            namespace: ""
+            syncOptions: '["CreateNamespace=true","ServerSideApply=true"]'
+  template:
+    metadata:
+      name: "{{.name}}"
+      namespace: openshift-gitops
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/REPLACE_ORG/REPLACE_REPO.git
+        targetRevision: main
+        path: "{{.path}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
